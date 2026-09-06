@@ -36,11 +36,12 @@ function configBadge(label: string, active: boolean) {
 }
 
 export function SettingsPage() {
-  const { user } = useAuth()
+  const { user, logout } = useAuth()
   const { language } = useLanguage()
   const [activeTab, setActiveTab] = useState<Tab>('account')
 
   // Account state
+  const [oldPassword, setOldPassword] = useState('')
   const [newPassword, setNewPassword] = useState('')
   const [showPassword, setShowPassword] = useState(false)
   const [changingPassword, setChangingPassword] = useState(false)
@@ -107,7 +108,7 @@ export function SettingsPage() {
 
   const handleChangePassword = async (e: React.FormEvent) => {
     e.preventDefault()
-    if (newPassword.length < 8) {
+    if (!oldPassword || newPassword.length < 8) {
       toast.error('Password must be at least 8 characters')
       return
     }
@@ -119,14 +120,16 @@ export function SettingsPage() {
           'Content-Type': 'application/json',
           Authorization: `Bearer ${localStorage.getItem('auth_token') || ''}`,
         },
-        body: JSON.stringify({ new_password: newPassword }),
+        body: JSON.stringify({ old_password: oldPassword, new_password: newPassword }),
       })
       if (!res.ok) {
         const data = await res.json().catch(() => ({}))
         throw new Error(data.error || 'Failed to update password')
       }
-      toast.success('Password updated successfully')
+      toast.success('Password updated. Please sign in again.')
+      setOldPassword('')
       setNewPassword('')
+      logout()
     } catch (err) {
       toast.error(
         err instanceof Error ? err.message : 'Failed to update password'
@@ -377,11 +380,27 @@ export function SettingsPage() {
                 </h3>
                 <form onSubmit={handleChangePassword} className="space-y-4">
                   <div>
-                    <label className="block text-xs font-medium text-nofx-text-muted mb-2">
+                    <label htmlFor="current-password" className="block text-xs font-medium text-nofx-text-muted mb-2">
+                      Current Password
+                    </label>
+                    <input
+                      id="current-password"
+                      type="password"
+                      autoComplete="current-password"
+                      value={oldPassword}
+                      onChange={(e) => setOldPassword(e.target.value)}
+                      className="w-full bg-nofx-bg-deeper border border-[rgba(26,24,19,0.14)] rounded-xl px-4 py-3 text-sm text-nofx-text"
+                      required
+                    />
+                  </div>
+                  <div>
+                    <label htmlFor="new-password" className="block text-xs font-medium text-nofx-text-muted mb-2">
                       New Password
                     </label>
                     <div className="relative">
                       <input
+                        id="new-password"
+                        autoComplete="new-password"
                         type={showPassword ? 'text' : 'password'}
                         value={newPassword}
                         onChange={(e) => setNewPassword(e.target.value)}
@@ -404,7 +423,7 @@ export function SettingsPage() {
                   </div>
                   <button
                     type="submit"
-                    disabled={changingPassword || newPassword.length < 8}
+                    disabled={changingPassword || !oldPassword || newPassword.length < 8}
                     className="w-full bg-nofx-gold hover:bg-nofx-gold-highlight active:scale-[0.98] text-nofx-bg font-semibold py-3 rounded-xl text-sm transition-all disabled:opacity-50 disabled:cursor-not-allowed"
                   >
                     {changingPassword ? 'Updating...' : 'Update Password'}

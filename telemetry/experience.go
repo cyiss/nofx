@@ -3,6 +3,8 @@ package telemetry
 
 import (
 	"bytes"
+	"crypto/rand"
+	"encoding/hex"
 	"encoding/json"
 	"net/http"
 	"sync"
@@ -113,28 +115,33 @@ func TrackTrade(event TradeEvent) {
 	}()
 }
 
-// sendTradeEvent sends the trade event to GA4
+// sendTradeEvent deliberately excludes financial values and account identifiers.
 func sendTradeEvent(event TradeEvent) error {
-	client.mu.RLock()
-	installationID := client.installationID
-	client.mu.RUnlock()
+	return sendEvent("trade", map[string]interface{}{
+		"exchange":   event.Exchange,
+		"trade_type": event.TradeType,
+	})
+}
+
+func sendEvent(name string, params map[string]interface{}) error {
+	// Recheck after asynchronous dispatch so queued events respect opt-out.
+	if !IsEnabled() {
+		return nil
+	}
+	// GA4 requires client_id. Use a fresh random value per event, never the
+	// persisted installation ID, user ID or trader ID.
+	var eventID [16]byte
+	if _, err := rand.Read(eventID[:]); err != nil {
+		return err
+	}
+	params["engagement_time_msec"] = 1
 
 	payload := telemetryPayload{
-		ClientID: installationID,
+		ClientID: hex.EncodeToString(eventID[:]),
 		Events: []telemetryEvent{
 			{
-				Name: "trade",
-				Params: map[string]interface{}{
-					"exchange":             event.Exchange,
-					"trade_type":           event.TradeType,
-					"symbol":               event.Symbol,
-					"amount_usd":           event.AmountUSD,
-					"leverage":             event.Leverage,
-					"installation_id":      installationID, // For counting active installations
-					"user_id":              event.UserID,   // For counting active users
-					"trader_id":            event.TraderID, // For counting active traders
-					"engagement_time_msec": 1,              // Required by GA4
-				},
+				Name:   name,
+				Params: params,
 			},
 		},
 	}
@@ -166,34 +173,7 @@ func TrackStartup(version string) {
 	}
 
 	go func() {
-		client.mu.RLock()
-		installationID := client.installationID
-		client.mu.RUnlock()
-
-		payload := telemetryPayload{
-			ClientID: installationID,
-			Events: []telemetryEvent{
-				{
-					Name: "app_startup",
-					Params: map[string]interface{}{
-						"version":              version,
-						"installation_id":      installationID,
-						"engagement_time_msec": 1,
-					},
-				},
-			},
-		}
-
-		jsonData, _ := json.Marshal(payload)
-		url := telemetryEndpoint + "?measurement_id=" + tid + "&api_secret=" + tk
-		req, _ := http.NewRequest("POST", url, bytes.NewBuffer(jsonData))
-		if req != nil {
-			req.Header.Set("Content-Type", "application/json")
-			resp, err := httpClient.Do(req)
-			if err == nil {
-				resp.Body.Close()
-			}
-		}
+		_ = sendEvent("app_startup", map[string]interface{}{"version": version})
 	}()
 }
 
@@ -203,40 +183,12 @@ func TrackAIUsage(event AIUsageEvent) {
 	}
 
 	go func() {
-		client.mu.RLock()
-		installationID := client.installationID
-		client.mu.RUnlock()
-
-		payload := telemetryPayload{
-			ClientID: installationID,
-			Events: []telemetryEvent{
-				{
-					Name: "ai_usage",
-					Params: map[string]interface{}{
-						"model_provider":       event.ModelProvider,
-						"model_name":           event.ModelName,
-						"channel":              event.Channel,
-						"input_tokens":         event.InputTokens,
-						"output_tokens":        event.OutputTokens,
-						"total_tokens":         event.InputTokens + event.OutputTokens,
-						"installation_id":      installationID,
-						"user_id":              event.UserID,
-						"trader_id":            event.TraderID,
-						"engagement_time_msec": 1,
-					},
-				},
-			},
-		}
-
-		jsonData, _ := json.Marshal(payload)
-		url := telemetryEndpoint + "?measurement_id=" + tid + "&api_secret=" + tk
-		req, _ := http.NewRequest("POST", url, bytes.NewBuffer(jsonData))
-		if req != nil {
-			req.Header.Set("Content-Type", "application/json")
-			resp, err := httpClient.Do(req)
-			if err == nil {
-				resp.Body.Close()
-			}
-		}
+		_ = sendEvent("ai_usage", map[string]interface{}{
+			"model_provider": event.ModelProvider,
+			"channel":        event.Channel,
+			"input_tokens":   event.InputTokens,
+			"output_tokens":  event.OutputTokens,
+			"total_tokens":   event.InputTokens + event.OutputTokens,
+		})
 	}()
 }

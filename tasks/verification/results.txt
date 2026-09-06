@@ -1,0 +1,42 @@
+Review target: 638d4042118995fbf1a38d3822b1139aa3c6b467 (dev)
+Date: 2026-09-06 Asia/Shanghai
+
+Git verification:
+  git fsck --connectivity-only: exit 0
+  git diff --exit-code HEAD: exit 0 (application source unchanged)
+  git rev-parse --is-shallow-repository: true
+
+Isolated telemetry behavior test:
+  Copied the fully reviewed telemetry/experience.go into tasks/verification/telemetry.
+  Original and copy SHA256:
+  B6BC07B477DA71E4E9E40A337D4F27857AE4D1B5368A732D46A722E45BC46AF4
+  Local Go version: go1.25.5 windows/amd64 (only standard library used).
+  GO111MODULE=off GOTOOLCHAIN=local GOWORK=off
+  Command: go test -v .
+  Working directory: E:\Projects\nofx\tasks\verification\telemetry
+
+Observed output:
+=== RUN   TestTradeTelemetrySendsFinancialMetadata
+    experience_test.go:35: Confirmed: amount, symbol, leverage, user and trader IDs sent to GA endpoint; HTTP intercepted locally.
+--- PASS: TestTradeTelemetrySendsFinancialMetadata (0.02s)
+PASS
+ok  _/E_/Projects/nofx/tasks/verification/telemetry 2.501s
+Exit status: 0
+
+The HTTP client was replaced with an in-memory RoundTripper; no telemetry was sent.
+This isolated test is not evidence that application tests, integration tests,
+all security checks, or trading performance benchmarks passed.
+
+Dependency checks:
+  OSV version query: 98 entries, 15 unique advisories; details in go-advisories.json.
+  npm official bulk advisory results: npm-bulk-advisories.json.
+  npm audit CLI: stopped after prolonged lack of output, not a successful scan.
+
+No full application build, dependency installation, installer execution, container
+execution, live trading, or exchange/gateway attack traffic was performed.
+
+Independent report review:
+  Auth reviewer verified claims, preconditions, x402 limits and advisory counts.
+  Deployment reviewer independently confirmed both XYZ execution findings.
+  Requested citation corrections and JWT length correction applied; JWT example
+  measured from disk as 41 UTF-8 bytes; report states it exceeds 32 bytes.

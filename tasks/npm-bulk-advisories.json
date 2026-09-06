@@ -1,0 +1,238 @@
+{
+  "source": "https://registry.npmjs.org/-/npm/v1/security/advisories/bulk",
+  "date": "2026-09-06",
+  "commit": "638d4042118995fbf1a38d3822b1139aa3c6b467",
+  "method": "POST public lockfile package names and locked versions; no installation or project script execution",
+  "preservation_note": "Original response values transcribed from prior tool output; JSON formatting and key order are not original HTTP bytes. No second audit request.",
+  "raw_response": {
+    "react-router": [
+      {
+        "id": 1138769,
+        "url": "https://github.com/advisories/GHSA-qwww-vcr4-c8h2",
+        "title": "React Router: RSC Mode CSRF Bypass Allows Action Execution Before 400 Response",
+        "severity": "high",
+        "vulnerable_versions": ">=7.12.0 <7.18.2",
+        "cwe": [
+          "CWE-352"
+        ],
+        "cvss": {
+          "score": 0,
+          "vectorString": null
+        }
+      }
+    ],
+    "postcss-selector-parser": [
+      {
+        "id": 1153170,
+        "url": "https://github.com/advisories/GHSA-w9m9-85wc-3x92",
+        "title": "postcss-selector-parser allows denial of service through uncontrolled AST recursion",
+        "severity": "low",
+        "vulnerable_versions": ">=6.1.0 <6.1.3",
+        "cwe": [
+          "CWE-404"
+        ],
+        "cvss": {
+          "score": 4.3,
+          "vectorString": "CVSS:3.1/AV:N/AC:L/PR:N/UI:R/S:U/C:N/I:N/A:L"
+        }
+      }
+    ],
+    "@humanfs/node": [
+      {
+        "id": 1158499,
+        "url": "https://github.com/advisories/GHSA-p498-v437-472g",
+        "title": "humanfs: Recursive copy follows symlinked files and copies data from outside the source tree",
+        "severity": "moderate",
+        "vulnerable_versions": "<0.16.8",
+        "cwe": [
+          "CWE-22"
+        ],
+        "cvss": {
+          "score": 0,
+          "vectorString": null
+        }
+      }
+    ],
+    "brace-expansion": [
+      {
+        "id": 1130588,
+        "url": "https://github.com/advisories/GHSA-mh99-v99m-4gvg",
+        "title": "brace-expansion: DoS via unbounded expansion length causing an out-of-memory process crash",
+        "severity": "high",
+        "vulnerable_versions": "<1.1.17",
+        "cwe": [
+          "CWE-400",
+          "CWE-770"
+        ],
+        "cvss": {
+          "score": 7.5,
+          "vectorString": "CVSS:3.1/AV:N/AC:L/PR:N/UI:N/S:U/C:N/I:N/A:H"
+        }
+      },
+      {
+        "id": 1130589,
+        "url": "https://github.com/advisories/GHSA-mh99-v99m-4gvg",
+        "title": "brace-expansion: DoS via unbounded expansion length causing an out-of-memory process crash",
+        "severity": "high",
+        "vulnerable_versions": ">=2.0.0 <2.1.3",
+        "cwe": [
+          "CWE-400",
+          "CWE-770"
+        ],
+        "cvss": {
+          "score": 7.5,
+          "vectorString": "CVSS:3.1/AV:N/AC:L/PR:N/UI:N/S:U/C:N/I:N/A:H"
+        }
+      },
+      {
+        "id": 1130736,
+        "url": "https://github.com/advisories/GHSA-rgw5-rvv9-x895",
+        "title": "brace-expansion: DoS via unbounded intermediate arrays, bypassing the CVE-2026-14257 mitigation",
+        "severity": "high",
+        "vulnerable_versions": ">=2.0.0 <2.1.4",
+        "cwe": [
+          "CWE-400",
+          "CWE-770"
+        ],
+        "cvss": {
+          "score": 7.5,
+          "vectorString": "CVSS:3.1/AV:N/AC:L/PR:N/UI:N/S:U/C:N/I:N/A:H"
+        }
+      },
+      {
+        "id": 1130737,
+        "url": "https://github.com/advisories/GHSA-rgw5-rvv9-x895",
+        "title": "brace-expansion: DoS via unbounded intermediate arrays, bypassing the CVE-2026-14257 mitigation",
+        "severity": "high",
+        "vulnerable_versions": "<1.1.18",
+        "cwe": [
+          "CWE-400",
+          "CWE-770"
+        ],
+        "cvss": {
+          "score": 7.5,
+          "vectorString": "CVSS:3.1/AV:N/AC:L/PR:N/UI:N/S:U/C:N/I:N/A:H"
+        }
+      }
+    ],
+    "js-yaml": [
+      {
+        "id": 1138115,
+        "url": "https://github.com/advisories/GHSA-5p4m-2wfm-xmqj",
+        "title": "JS-YAML: Quadratic CPU consumption in !!omap resolution (3.x and 4.x) — CVE-2026-59870 fix not backported",
+        "severity": "high",
+        "vulnerable_versions": ">=4.0.0 <4.3.1",
+        "cwe": [
+          "CWE-407"
+        ],
+        "cvss": {
+          "score": 7.5,
+          "vectorString": "CVSS:3.1/AV:N/AC:L/PR:N/UI:N/S:U/C:N/I:N/A:H"
+        }
+      }
+    ],
+    "browserslist": [
+      {
+        "id": 1153171,
+        "url": "https://github.com/advisories/GHSA-c83g-rgw3-j3cx",
+        "title": "Browserslist: Unbounded memory growth (no cache eviction) via distinct query results, leading to eventual OOM",
+        "severity": "high",
+        "vulnerable_versions": "<=4.28.6",
+        "cwe": [
+          "CWE-770"
+        ],
+        "cvss": {
+          "score": 7.5,
+          "vectorString": "CVSS:3.1/AV:N/AC:L/PR:N/UI:N/S:U/C:N/I:N/A:H"
+        }
+      },
+      {
+        "id": 1153172,
+        "url": "https://github.com/advisories/GHSA-73wf-gq98-2v4g",
+        "title": "Browserslist: Uncaught crash / prototype write via untrusted browserslist-stats.json custom stats (normalizeStats)",
+        "severity": "high",
+        "vulnerable_versions": "<=4.28.6",
+        "cwe": [
+          "CWE-248",
+          "CWE-1321"
+        ],
+        "cvss": {
+          "score": 7.5,
+          "vectorString": "CVSS:3.1/AV:N/AC:L/PR:N/UI:N/S:U/C:N/I:N/A:H"
+        }
+      }
+    ],
+    "nanoid": [
+      {
+        "id": 1139427,
+        "url": "https://github.com/advisories/GHSA-2v37-7h3g-55p8",
+        "title": "nanoid: custom generators can loop indefinitely when size is zero",
+        "severity": "high",
+        "vulnerable_versions": "<3.3.18",
+        "cwe": [
+          "CWE-835"
+        ],
+        "cvss": {
+          "score": 5.9,
+          "vectorString": "CVSS:3.1/AV:N/AC:H/PR:N/UI:N/S:U/C:N/I:N/A:H"
+        }
+      }
+    ]
+  },
+  "affected_lock_versions": [
+    {
+      "package": "react-router",
+      "versions": [
+        "7.18.1"
+      ],
+      "dev": false
+    },
+    {
+      "package": "postcss-selector-parser",
+      "versions": [
+        "6.1.2"
+      ],
+      "dev": true
+    },
+    {
+      "package": "@humanfs/node",
+      "versions": [
+        "0.16.7"
+      ],
+      "dev": true
+    },
+    {
+      "package": "brace-expansion",
+      "versions": [
+        "1.1.16",
+        "2.1.2"
+      ],
+      "dev": true
+    },
+    {
+      "package": "js-yaml",
+      "versions": [
+        "4.3.0"
+      ],
+      "dev": true
+    },
+    {
+      "package": "browserslist",
+      "versions": [
+        "4.28.1"
+      ],
+      "dev": true
+    },
+    {
+      "package": "nanoid",
+      "versions": [
+        "3.3.16"
+      ],
+      "dev": true
+    }
+  ],
+  "applicability_notes": [
+    "React Router advisory only affects unstable RSC APIs; this repository uses a BrowserRouter static SPA, so exploitable RSC path was not found.",
+    "Remaining affected packages are marked dev dependencies. Advisory matches are not evidence of production exploitability."
+  ]
+}

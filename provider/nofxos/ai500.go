@@ -2,8 +2,10 @@ package nofxos
 
 import (
 	"encoding/json"
+	"errors"
 	"fmt"
 	"log"
+	"nofx/mcp/payment"
 	"strings"
 	"time"
 )
@@ -33,6 +35,13 @@ type AI500Response struct {
 // GetAI500List retrieves AI500 coin list with retry mechanism
 func (c *Client) GetAI500List() ([]CoinData, error) {
 	maxRetries := 3
+	// The payment layer retries unsigned requests itself. Repeating a completed
+	// paid request after parsing/API failure could buy the same result again.
+	c.mu.RLock()
+	if c.claw402 != nil {
+		maxRetries = 1
+	}
+	c.mu.RUnlock()
 	var lastErr error
 
 	for attempt := 1; attempt <= maxRetries; attempt++ {
@@ -50,6 +59,9 @@ func (c *Client) GetAI500List() ([]CoinData, error) {
 		}
 
 		lastErr = err
+		if errors.Is(err, payment.ErrPaymentOutcomeUnknown) {
+			return nil, err
+		}
 		log.Printf("❌ AI500 request attempt %d failed: %v", attempt, err)
 	}
 

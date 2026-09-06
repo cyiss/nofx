@@ -1,9 +1,9 @@
 package api
 
 import (
+	"errors"
 	"fmt"
 	"net/http"
-	"strings"
 	"time"
 
 	"nofx/auth"
@@ -15,32 +15,13 @@ import (
 	"gorm.io/gorm"
 )
 
-// handleLogout Add current token to blacklist
+// handleLogout durably revokes every session for this account.
 func (s *Server) handleLogout(c *gin.Context) {
-	authHeader := c.GetHeader("Authorization")
-	if authHeader == "" {
-		c.JSON(http.StatusUnauthorized, gin.H{"error": "Missing Authorization header"})
+	if err := s.store.User().RevokeSessions(c.GetString("user_id")); err != nil {
+		SafeInternalError(c, "Failed to log out", err)
 		return
 	}
-	parts := strings.Split(authHeader, " ")
-	if len(parts) != 2 || parts[0] != "Bearer" {
-		c.JSON(http.StatusUnauthorized, gin.H{"error": "Invalid Authorization format"})
-		return
-	}
-	tokenString := parts[1]
-	claims, err := auth.ValidateJWT(tokenString)
-	if err != nil {
-		c.JSON(http.StatusUnauthorized, gin.H{"error": "Invalid token"})
-		return
-	}
-	var exp time.Time
-	if claims.ExpiresAt != nil {
-		exp = claims.ExpiresAt.Time
-	} else {
-		exp = time.Now().Add(24 * time.Hour)
-	}
-	auth.BlacklistToken(tokenString, exp)
-	c.JSON(http.StatusOK, gin.H{"message": "Logged out"})
+	c.JSON(http.StatusOK, gin.H{"message": "All sessions logged out"})
 }
 
 // handleRegister Handle user registration request.
@@ -96,7 +77,11 @@ func (s *Server) handleRegister(c *gin.Context) {
 		PasswordHash: passwordHash,
 	}
 
-	err = s.store.User().Create(user)
+	err = s.store.User().CreateFirst(user)
+	if errors.Is(err, store.ErrAlreadyInitialized) {
+		c.JSON(http.StatusForbidden, gin.H{"error": "System already initialized"})
+		return
+	}
 	if err != nil {
 		SafeInternalError(c, "Failed to create user", err)
 		return
@@ -109,7 +94,7 @@ func (s *Server) handleRegister(c *gin.Context) {
 	// explicitly via export/import, never via implicit adoption on registration.
 
 	// Generate JWT token
-	token, err := auth.GenerateJWT(user.ID, user.Email)
+	token, err := auth.GenerateJWT(user.ID, user.Email, user.SessionVersion)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to generate token"})
 		return
@@ -165,7 +150,7 @@ func (s *Server) handleLogin(c *gin.Context) {
 	}
 
 	// Issue token directly after password verification.
-	token, err := auth.GenerateJWT(user.ID, user.Email)
+	token, err := auth.GenerateJWT(user.ID, user.Email, user.SessionVersion)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to generate token"})
 		return
@@ -183,10 +168,16 @@ func (s *Server) handleLogin(c *gin.Context) {
 func (s *Server) handleChangePassword(c *gin.Context) {
 	userID := c.GetString("user_id")
 	var req struct {
+		OldPassword string `json:"old_password" binding:"required"`
 		NewPassword string `json:"new_password" binding:"required,min=8"`
 	}
 	if err := c.ShouldBindJSON(&req); err != nil {
-		SafeBadRequest(c, "new_password is required (min 8 chars)")
+		SafeBadRequest(c, "old_password and new_password (min 8 chars) are required")
+		return
+	}
+	user, err := s.store.User().GetByID(userID)
+	if err != nil || !auth.CheckPassword(req.OldPassword, user.PasswordHash) {
+		c.JSON(http.StatusUnauthorized, gin.H{"error": "Current password incorrect"})
 		return
 	}
 	hash, err := auth.HashPassword(req.NewPassword)
@@ -194,7 +185,7 @@ func (s *Server) handleChangePassword(c *gin.Context) {
 		SafeInternalError(c, "Password processing failed", err)
 		return
 	}
-	if err := s.store.User().UpdatePassword(userID, hash); err != nil {
+	if err := s.store.User().UpdatePasswordIfCurrent(userID, user.PasswordHash, hash); err != nil {
 		SafeInternalError(c, "Failed to update password", err)
 		return
 	}

@@ -1,0 +1,14 @@
+import {mkdir, writeFile} from 'node:fs/promises';
+import {createHash} from 'node:crypto';
+const list = await (await fetch('https://go.dev/dl/?mode=json')).json();
+const release = list.find(x => x.version.startsWith('go1.26.') && x.stable);
+const file = release.files.find(x => x.os === 'windows' && x.arch === 'amd64' && x.kind === 'archive');
+console.log(JSON.stringify(file));
+const response = await fetch(`https://go.dev/dl/${file.filename}`, {signal: AbortSignal.timeout(180000)});
+if (!response.ok) throw new Error(`HTTP ${response.status}`);
+const bytes = Buffer.from(await response.arrayBuffer());
+if (createHash('sha256').update(bytes).digest('hex') !== file.sha256) throw new Error('SHA256 mismatch');
+await mkdir('.cache/toolchain', {recursive:true});
+await writeFile(`.cache/toolchain/${file.filename}`, bytes);
+await writeFile('tasks/toolchain-download.json',JSON.stringify(file,null,2));
+console.log('Verified and saved ' + file.filename);

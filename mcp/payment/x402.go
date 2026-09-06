@@ -8,6 +8,7 @@ import (
 	"encoding/base64"
 	"encoding/hex"
 	"encoding/json"
+	"errors"
 	"fmt"
 	"io"
 	"math/big"
@@ -23,9 +24,12 @@ import (
 	"nofx/mcp"
 )
 
+// ErrPaymentOutcomeUnknown means an authorization was sent and must not be
+// automatically replaced by a new payment, including by higher-level retries.
+var ErrPaymentOutcomeUnknown = errors.New("payment outcome unknown; automatic repayment prohibited")
+
 const (
-	// X402MaxPaymentRetries is the number of retries for 5xx/expired-402 errors
-	// on the payment-signed request. Payment is re-signed on 402 (no double-charge).
+	// X402MaxPaymentRetries bounds retries for initial, unsigned requests.
 	X402MaxPaymentRetries = 5
 
 	// X402RetryBaseWait is the base wait between payment retry attempts.
@@ -240,7 +244,7 @@ func DoX402Request(
 	providerTag string,
 	logger mcp.Logger,
 	headerSink ...*http.Header,
-) ([]byte, error) {
+) (result []byte, retErr error) {
 	if ctx == nil {
 		ctx = context.Background()
 	}
@@ -269,7 +273,7 @@ func DoX402Request(
 			return nil, fmt.Errorf("failed to sign x402 payment: %w", err)
 		}
 
-		// Retry loop for 5xx / expired-402 errors on the payment-signed request.
+		// Never mint another authorization when payment status is ambiguous.
 		var lastBody []byte
 		var lastStatus int
 		for attempt := 1; attempt <= X402MaxPaymentRetries; attempt++ {
@@ -280,6 +284,11 @@ func DoX402Request(
 			req2 = req2.WithContext(ctx)
 			req2.Header.Set("X-Payment", paymentSig)
 			req2.Header.Set("Payment-Signature", paymentSig)
+			defer func() {
+				if retErr != nil {
+					retErr = fmt.Errorf("%w: %w", ErrPaymentOutcomeUnknown, retErr)
+				}
+			}()
 
 			resp2, err := httpClient.Do(req2)
 			if err != nil {
@@ -308,40 +317,10 @@ func DoX402Request(
 			lastBody = body2
 			lastStatus = resp2.StatusCode
 
-			retryable := resp2.StatusCode == http.StatusPaymentRequired
-
-			if retryable && attempt < X402MaxPaymentRetries {
-				wait := X402RetryBaseWait * time.Duration(attempt)
-
-				// If we got 402 again, the payment signature expired — re-sign.
-				if resp2.StatusCode == http.StatusPaymentRequired {
-					newHeader := resp2.Header.Get("Payment-Required")
-					if newHeader == "" {
-						newHeader = resp2.Header.Get("X-Payment-Required")
-					}
-					if newHeader != "" {
-						newSig, signErr := signFn(newHeader)
-						if signErr == nil {
-							paymentSig = newSig
-							logger.Warnf("⚠️  [%s] Payment expired (402), re-signed and retrying in %v (%d/%d)...",
-								providerTag, wait, attempt+1, X402MaxPaymentRetries)
-						} else {
-							logger.Warnf("⚠️  [%s] Payment expired (402), re-sign failed: %v, retrying in %v (%d/%d)...",
-								providerTag, signErr, wait, attempt+1, X402MaxPaymentRetries)
-						}
-					} else {
-						logger.Warnf("⚠️  [%s] Got 402 but no new Payment-Required header, retrying in %v (%d/%d)...",
-							providerTag, wait, attempt+1, X402MaxPaymentRetries)
-					}
-				} else {
-					logger.Warnf("⚠️  [%s] Server error (status %d), retrying in %v (%d/%d)...",
-						providerTag, resp2.StatusCode, wait, attempt+1, X402MaxPaymentRetries)
-				}
-
-				if err := x402Sleep(ctx, wait); err != nil {
-					return nil, err
-				}
-				continue
+			// A repeated 402 does not prove the previous authorization is unspent.
+			// Stop on ambiguous settlement instead of issuing an independent nonce.
+			if resp2.StatusCode == http.StatusPaymentRequired {
+				return nil, fmt.Errorf("%s payment status ambiguous (402); refusing another authorization", providerTag)
 			}
 
 			// Non-retryable error or final attempt — fail
@@ -375,7 +354,7 @@ func DoX402RequestStream(
 	signFn X402SignFunc,
 	providerTag string,
 	logger mcp.Logger,
-) (*http.Response, error) {
+) (result *http.Response, retErr error) {
 	if ctx == nil {
 		ctx = context.Background()
 	}
@@ -419,6 +398,11 @@ func DoX402RequestStream(
 		req2 = req2.WithContext(ctx)
 		req2.Header.Set("X-Payment", paymentSig)
 		req2.Header.Set("Payment-Signature", paymentSig)
+		defer func() {
+			if retErr != nil {
+				retErr = fmt.Errorf("%w: %w", ErrPaymentOutcomeUnknown, retErr)
+			}
+		}()
 
 		resp2, err := httpClient.Do(req2)
 		if err != nil {
@@ -435,7 +419,7 @@ func DoX402RequestStream(
 			return resp2, nil // caller reads and closes body
 		}
 
-		// Non-200: read body for error handling / re-sign
+		// Non-200: read body for error handling
 		body2, readErr := io.ReadAll(resp2.Body)
 		resp2.Body.Close()
 		if readErr != nil {
@@ -445,39 +429,10 @@ func DoX402RequestStream(
 		lastBody = body2
 		lastStatus = resp2.StatusCode
 
-		retryable := resp2.StatusCode == http.StatusPaymentRequired
-
-		if retryable && attempt < X402MaxPaymentRetries {
-			wait := X402RetryBaseWait * time.Duration(attempt)
-
-			if resp2.StatusCode == http.StatusPaymentRequired {
-				newHeader := resp2.Header.Get("Payment-Required")
-				if newHeader == "" {
-					newHeader = resp2.Header.Get("X-Payment-Required")
-				}
-				if newHeader != "" {
-					newSig, signErr := signFn(newHeader)
-					if signErr == nil {
-						paymentSig = newSig
-						logger.Warnf("⚠️  [%s] Payment expired (402), re-signed and retrying in %v (%d/%d)...",
-							providerTag, wait, attempt+1, X402MaxPaymentRetries)
-					} else {
-						logger.Warnf("⚠️  [%s] Payment expired (402), re-sign failed: %v, retrying in %v (%d/%d)...",
-							providerTag, signErr, wait, attempt+1, X402MaxPaymentRetries)
-					}
-				} else {
-					logger.Warnf("⚠️  [%s] Got 402 but no new Payment-Required header, retrying in %v (%d/%d)...",
-						providerTag, wait, attempt+1, X402MaxPaymentRetries)
-				}
-			} else {
-				logger.Warnf("⚠️  [%s] Server error (status %d), retrying in %v (%d/%d)...",
-					providerTag, resp2.StatusCode, wait, attempt+1, X402MaxPaymentRetries)
-			}
-
-			if err := x402Sleep(ctx, wait); err != nil {
-				return nil, err
-			}
-			continue
+		// A repeated 402 does not prove the previous authorization is unspent.
+		// Stop on ambiguous settlement instead of issuing an independent nonce.
+		if resp2.StatusCode == http.StatusPaymentRequired {
+			return nil, fmt.Errorf("%s payment status ambiguous (402); refusing another authorization", providerTag)
 		}
 
 		break

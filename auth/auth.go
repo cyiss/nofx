@@ -2,8 +2,6 @@ package auth
 
 import (
 	"fmt"
-	"log"
-	"sync"
 	"time"
 
 	"github.com/golang-jwt/jwt/v5"
@@ -13,59 +11,14 @@ import (
 // JWTSecret is the JWT secret key, will be dynamically set from config
 var JWTSecret []byte
 
-// tokenBlacklist for logged out tokens (memory only, cleaned by expiration time)
-var tokenBlacklist = struct {
-	sync.RWMutex
-	items map[string]time.Time
-}{items: make(map[string]time.Time)}
-
-// maxBlacklistEntries is the maximum capacity threshold for blacklist
-const maxBlacklistEntries = 100_000
-
-// SetJWTSecret sets the JWT secret key
-func SetJWTSecret(secret string) {
-	JWTSecret = []byte(secret)
-}
-
-// BlacklistToken adds token to blacklist until expiration
-func BlacklistToken(token string, exp time.Time) {
-	tokenBlacklist.Lock()
-	defer tokenBlacklist.Unlock()
-	tokenBlacklist.items[token] = exp
-
-	// If exceeds capacity threshold, perform expired cleanup; if still over limit, log warning
-	if len(tokenBlacklist.items) > maxBlacklistEntries {
-		now := time.Now()
-		for t, e := range tokenBlacklist.items {
-			if now.After(e) {
-				delete(tokenBlacklist.items, t)
-			}
-		}
-		if len(tokenBlacklist.items) > maxBlacklistEntries {
-			log.Printf("auth: token blacklist size (%d) exceeds limit (%d) after sweep; consider reducing JWT TTL or using a shared persistent store",
-				len(tokenBlacklist.items), maxBlacklistEntries)
-		}
-	}
-}
-
-// IsTokenBlacklisted checks if token is in blacklist (auto cleanup on expiration)
-func IsTokenBlacklisted(token string) bool {
-	tokenBlacklist.Lock()
-	defer tokenBlacklist.Unlock()
-	if exp, ok := tokenBlacklist.items[token]; ok {
-		if time.Now().After(exp) {
-			delete(tokenBlacklist.items, token)
-			return false
-		}
-		return true
-	}
-	return false
-}
+// SetJWTSecret sets the JWT signing key.
+func SetJWTSecret(secret string) { JWTSecret = []byte(secret) }
 
 // Claims represents JWT claims
 type Claims struct {
-	UserID string `json:"user_id"`
-	Email  string `json:"email"`
+	SessionVersion uint64 `json:"session_version"`
+	UserID         string `json:"user_id"`
+	Email          string `json:"email"`
 	jwt.RegisteredClaims
 }
 
@@ -82,10 +35,11 @@ func CheckPassword(password, hash string) bool {
 }
 
 // GenerateJWT generates JWT token
-func GenerateJWT(userID, email string) (string, error) {
+func GenerateJWT(userID, email string, sessionVersion uint64) (string, error) {
 	claims := Claims{
-		UserID: userID,
-		Email:  email,
+		SessionVersion: sessionVersion,
+		UserID:         userID,
+		Email:          email,
 		RegisteredClaims: jwt.RegisteredClaims{
 			ExpiresAt: jwt.NewNumericDate(time.Now().Add(24 * time.Hour)), // Expires in 24 hours
 			IssuedAt:  jwt.NewNumericDate(time.Now()),

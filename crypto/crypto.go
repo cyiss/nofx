@@ -92,8 +92,12 @@ func loadDataKeyFromEnv() ([]byte, error) {
 	if keyStr == "" {
 		return nil, fmt.Errorf("environment variable %s not set, please configure data encryption key in .env", EnvDataEncryptionKey)
 	}
+	if keyStr == "your-base64-encoded-32-byte-key" {
+		return nil, fmt.Errorf("%s matches the public example placeholder; restore your existing private key or migrate encrypted data before replacing it", EnvDataEncryptionKey)
+	}
 
-	// Try to decode
+	// Preserve legacy decoding and passphrase derivation so valid existing keys
+	// still decrypt stored credentials. Never silently generate a replacement.
 	if key, ok := decodePossibleKey(keyStr); ok {
 		return key, nil
 	}

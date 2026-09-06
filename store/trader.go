@@ -92,16 +92,16 @@ func (s *TraderStore) List(userID string) ([]*Trader, error) {
 
 // UpdateStatus updates trader running status
 func (s *TraderStore) UpdateStatus(userID, id string, isRunning bool) error {
-	return s.db.Model(&Trader{}).
+	return requireAffectedRecord(s.db.Model(&Trader{}).
 		Where("id = ? AND user_id = ?", id, userID).
-		Update("is_running", isRunning).Error
+		Update("is_running", isRunning))
 }
 
 // UpdateShowInCompetition updates trader competition visibility
 func (s *TraderStore) UpdateShowInCompetition(userID, id string, showInCompetition bool) error {
-	return s.db.Model(&Trader{}).
+	return requireAffectedRecord(s.db.Model(&Trader{}).
 		Where("id = ? AND user_id = ?", id, userID).
-		Update("show_in_competition", showInCompetition).Error
+		Update("show_in_competition", showInCompetition))
 }
 
 // Update updates trader configuration
@@ -137,35 +137,48 @@ func (s *TraderStore) Update(trader *Trader) error {
 		fmt.Printf("⚠️ TraderStore.Update: scan_interval_minutes=%d (<=0, NOT updating)\n", trader.ScanIntervalMinutes)
 	}
 
-	return s.db.Model(&Trader{}).
+	return requireAffectedRecord(s.db.Model(&Trader{}).
 		Where("id = ? AND user_id = ?", trader.ID, trader.UserID).
-		Updates(updates).Error
+		Updates(updates))
 }
 
 // UpdateInitialBalance updates initial balance
 func (s *TraderStore) UpdateInitialBalance(userID, id string, newBalance float64) error {
-	return s.db.Model(&Trader{}).
+	return requireAffectedRecord(s.db.Model(&Trader{}).
 		Where("id = ? AND user_id = ?", id, userID).
-		Update("initial_balance", newBalance).Error
+		Update("initial_balance", newBalance))
 }
 
 // UpdateCustomPrompt updates custom prompt
 func (s *TraderStore) UpdateCustomPrompt(userID, id string, customPrompt string, overrideBase bool) error {
-	return s.db.Model(&Trader{}).
+	return requireAffectedRecord(s.db.Model(&Trader{}).
 		Where("id = ? AND user_id = ?", id, userID).
 		Updates(map[string]interface{}{
 			"custom_prompt":        customPrompt,
 			"override_base_prompt": overrideBase,
-		}).Error
+		}))
 }
 
 // Delete deletes trader and associated data
 func (s *TraderStore) Delete(userID, id string) error {
-	// Delete associated equity snapshots first
-	s.db.Where("trader_id = ?", id).Delete(&EquitySnapshot{})
+	return s.db.Transaction(func(tx *gorm.DB) error {
+		if err := requireAffectedRecord(tx.Where("id = ? AND user_id = ?", id, userID).Delete(&Trader{})); err != nil {
+			return err
+		}
+		return tx.Where("trader_id = ?", id).Delete(&EquitySnapshot{}).Error
+	})
+}
 
-	// Delete the trader
-	return s.db.Where("id = ? AND user_id = ?", id, userID).Delete(&Trader{}).Error
+// A zero-row scoped mutation is not success: callers must not update global
+// in-memory state after a target failed its ownership predicate.
+func requireAffectedRecord(result *gorm.DB) error {
+	if result.Error != nil {
+		return result.Error
+	}
+	if result.RowsAffected != 1 {
+		return gorm.ErrRecordNotFound
+	}
+	return nil
 }
 
 // GetFullConfig gets trader full configuration

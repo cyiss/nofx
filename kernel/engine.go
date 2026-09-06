@@ -3,11 +3,13 @@ package kernel
 import (
 	"context"
 	"encoding/json"
+	"errors"
 	"fmt"
 	"io"
 	"net/http"
 	"nofx/logger"
 	"nofx/market"
+	"nofx/mcp/payment"
 	"nofx/provider/hyperliquid"
 	"nofx/provider/nofxos"
 	"nofx/provider/vergex"
@@ -1377,7 +1379,7 @@ func isVergexAllMarketType(marketType string) bool {
 }
 
 func isRetryableVergexDetailError(err error) bool {
-	if err == nil {
+	if err == nil || errors.Is(err, payment.ErrPaymentOutcomeUnknown) {
 		return false
 	}
 	msg := strings.ToLower(err.Error())

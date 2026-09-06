@@ -4,7 +4,7 @@ import { Terminal, Copy, Check, ChevronRight, Server, Command, Shield } from 'lu
 
 export default function DeploymentHub() {
     const [copied, setCopied] = useState(false)
-    const installCmd = "curl -fsSL https://raw.githubusercontent.com/NoFxAiOS/nofx/main/install.sh | bash"
+    const installCmd = "sh install.sh"
 
     const handleCopy = () => {
         navigator.clipboard.writeText(installCmd)
@@ -31,8 +31,8 @@ export default function DeploymentHub() {
                         </h2>
 
                         <p className="text-nofx-text-muted text-lg leading-relaxed font-light">
-                            One command on your laptop or any server installs
-                            everything. Open the address it prints, create your
+                            Clone and review this repository first. From that checkout, the command builds
+                            the local source with Docker. Open the local address it prints, create your
                             account, and the guided launch takes you to your
                             first AI trade in about five minutes — around $13
                             is enough to start.
@@ -56,7 +56,7 @@ export default function DeploymentHub() {
 
                         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 pt-4">
                             {[
-                                { icon: Command, label: "One-Line Install", desc: "Docker handles every dependency" },
+                                { icon: Command, label: "Local Source Build", desc: "Docker handles every dependency" },
                                 { icon: Shield, label: "Your Keys Stay Home", desc: "Runs on your machine, keys encrypted locally" }
                             ].map((item, i) => (
                                 <div key={i} className="flex gap-4 items-start p-4 rounded bg-nofx-bg-lighter border border-[rgba(26,24,19,0.14)] hover:border-nofx-gold/30 transition-colors group">

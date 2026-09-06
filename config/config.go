@@ -9,10 +9,9 @@ import (
 	"strings"
 )
 
-// insecureDefaultJWTSecret is the historical fallback value. Refusing to boot when
-// JWT_SECRET matches it (or is missing) prevents the server from silently signing
-// tokens with a well-known secret.
+// Public fallback/example values must never be used for signing tokens.
 const insecureDefaultJWTSecret = "default-jwt-secret-change-in-production"
+const insecureExampleJWTSecret = "your-jwt-secret-change-this-in-production"
 
 // minJWTSecretLength is the minimum byte length we accept for HS256 signing keys.
 // HS256 keys shorter than 32 bytes are brute-forceable.
@@ -43,9 +42,7 @@ type Config struct {
 	// Requires HTTPS or localhost. Set to false for HTTP access via IP.
 	TransportEncryption bool
 
-	// Experience improvement (anonymous usage statistics)
-	// Helps us understand product usage and improve the experience
-	// Set EXPERIENCE_IMPROVEMENT=false to disable
+	// Optional usage statistics; only EXPERIENCE_IMPROVEMENT=true opts in.
 	ExperienceImprovement bool
 
 	// Market data provider API keys
@@ -75,7 +72,7 @@ func Init() {
 func initConfig() error {
 	cfg := &Config{
 		APIServerPort:         8080,
-		ExperienceImprovement: true, // Default: enabled to help improve the product
+		ExperienceImprovement: false,
 		// Database defaults
 		DBType:    "sqlite",
 		DBPath:    "data/data.db",
@@ -93,8 +90,8 @@ func initConfig() error {
 	if cfg.JWTSecret == "" {
 		return fmt.Errorf("JWT_SECRET is required (set a random %d+ byte value in .env)", minJWTSecretLength)
 	}
-	if cfg.JWTSecret == insecureDefaultJWTSecret {
-		return fmt.Errorf("JWT_SECRET matches the insecure default; generate a fresh random value (e.g. `openssl rand -base64 48`)")
+	if cfg.JWTSecret == insecureDefaultJWTSecret || cfg.JWTSecret == insecureExampleJWTSecret {
+		return fmt.Errorf("JWT_SECRET matches a public default/example; generate a fresh random value (e.g. `openssl rand -base64 48`)")
 	}
 	if len(cfg.JWTSecret) < minJWTSecretLength {
 		return fmt.Errorf("JWT_SECRET must be at least %d bytes (got %d); generate via `openssl rand -base64 48`", minJWTSecretLength, len(cfg.JWTSecret))
@@ -112,11 +109,8 @@ func initConfig() error {
 		cfg.TransportEncryption = strings.ToLower(v) == "true"
 	}
 
-	// Experience improvement: anonymous usage statistics
-	// Default enabled, set EXPERIENCE_IMPROVEMENT=false to disable
-	if v := os.Getenv("EXPERIENCE_IMPROVEMENT"); v != "" {
-		cfg.ExperienceImprovement = strings.ToLower(v) != "false"
-	}
+	// Missing, malformed and legacy numeric values must not imply consent.
+	cfg.ExperienceImprovement = strings.EqualFold(os.Getenv("EXPERIENCE_IMPROVEMENT"), "true")
 
 	// Market data provider API keys
 	cfg.AlpacaAPIKey = os.Getenv("ALPACA_API_KEY")

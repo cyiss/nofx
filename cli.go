@@ -137,7 +137,7 @@ func runResetPassword(args []string) {
 		os.Exit(1)
 	}
 
-	fmt.Printf("✓ Password reset for %s. Log in with the new password.\n", user.Email)
+	fmt.Printf("✓ Password reset for %s. All sessions revoked; log in with the new password.\n", user.Email)
 }
 
 // runResetAccount wipes the database back to an uninitialized state. This is the

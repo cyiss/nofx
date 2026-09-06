@@ -25,10 +25,13 @@
 
 NOFX is an open-source trading terminal where the strategy is a language model. Each trader runs a continuous loop — read market structure, decide, execute, record the reasoning — while a Go runtime clamps every order to hard risk limits the model cannot override.
 
-Traders compose freely: any model, any of nine exchanges, any strategy. Run several side by side and compare them on a public leaderboard by realized return. Everything runs on your own machine; exchange credentials are encrypted at rest and never leave it.
+Traders compose freely: any model, any of nine exchanges, any strategy. Run several side by side and compare them on a public leaderboard by realized return. The application runs on your own machine; exchange credentials are encrypted at rest and used to authenticate requests to configured services.
 
 ```bash
-curl -fsSL https://raw.githubusercontent.com/NoFxAiOS/nofx/main/install.sh | bash
+git clone https://github.com/cyiss/nofx.git
+cd nofx
+# Review this checkout before installing
+sh install.sh
 ```
 
 The terminal opens at `http://127.0.0.1:3000`.
@@ -163,62 +166,22 @@ Crypto perpetuals on all nine exchanges. On Hyperliquid, the same runtime also t
 
 ## Install
 
-**Linux / macOS**
+Use the reviewed local checkout. Docker and OpenSSL are required for the installer on Linux/macOS or WSL:
 
 ```bash
-curl -fsSL https://raw.githubusercontent.com/NoFxAiOS/nofx/main/install.sh | bash
+git clone https://github.com/cyiss/nofx.git
+cd nofx
+# Review the source and configuration before installing
+sh install.sh
 ```
 
-**Railway**
+The installer generates private configuration with mode 600, preserves existing keys, and builds the local backend and frontend. Open http://127.0.0.1:3000 and register the first account locally. Updates require reviewing changes and rebuilding the checkout.
 
-[![Deploy on Railway](https://railway.com/button.svg)](https://railway.com/deploy/nofx?referralCode=nofx)
+For Windows, use WSL with Docker Desktop integration. For Railway, build this checkout using Dockerfile.railway and configure persistent JWT_SECRET, DATA_ENCRYPTION_KEY and RSA_PRIVATE_KEY before starting. Never regenerate the encryption key of an existing database without an offline migration.
 
-**Docker**
+For development, use Go 1.26.8+, Node.js 22 and a C compiler (SQLite CGO). Configure private environment variables, then build with `go build -o nofx`; install frontend dependencies with `npm ci --ignore-scripts` in `web`.
 
-```bash
-curl -O https://raw.githubusercontent.com/NoFxAiOS/nofx/main/docker-compose.prod.yml
-docker compose -f docker-compose.prod.yml up -d
-```
-
-**Windows** — install [Docker Desktop](https://www.docker.com/products/docker-desktop/), then:
-
-```powershell
-curl -o docker-compose.prod.yml https://raw.githubusercontent.com/NoFxAiOS/nofx/main/docker-compose.prod.yml
-docker compose -f docker-compose.prod.yml up -d
-```
-
-**From source** — Go 1.21+, Node.js 18+:
-
-```bash
-git clone https://github.com/NoFxAiOS/nofx.git && cd nofx
-go build -o nofx && ./nofx            # backend
-cd web && npm install && npm run dev  # frontend, in a second terminal
-```
-
-**Update** — re-run the install script; it upgrades in place.
-
-<details>
-<summary>Server deployment</summary>
-
-<br/>
-
-**HTTP**
-
-```bash
-curl -fsSL https://raw.githubusercontent.com/NoFxAiOS/nofx/main/install.sh | bash
-# http://YOUR_IP:3000
-```
-
-**HTTPS via Cloudflare**
-
-1. Add the domain to [Cloudflare](https://dash.cloudflare.com) (free plan)
-2. A record → server IP, proxied
-3. SSL/TLS → Flexible
-4. `TRANSPORT_ENCRYPTION=true` in `.env`
-
-</details>
-
-<br/>
+Remote access requires an HTTPS reverse proxy with encrypted transport to the origin. Docker host ports and the standalone API default to loopback. See [security remediation and migration notes](tasks/security-remediation.zh-CN.md) before upgrading an existing instance.
 
 ## Documentation
 

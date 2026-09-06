@@ -47,11 +47,6 @@ func wrapBuilderFeeNotApproved(err error) error {
 
 // OpenLong opens a long position (supports both crypto and xyz dex)
 func (t *HyperliquidTrader) OpenLong(symbol string, quantity float64, leverage int) (map[string]interface{}, error) {
-	// First cancel all pending orders for this coin
-	if err := t.CancelAllOrders(symbol); err != nil {
-		logger.Infof("  ⚠ Failed to cancel old pending orders: %v", err)
-	}
-
 	// Hyperliquid symbol format
 	coin := convertSymbolToHyperliquid(symbol)
 
@@ -62,10 +57,12 @@ func (t *HyperliquidTrader) OpenLong(symbol string, quantity float64, leverage i
 	// updates for HIP-3/XYZ perps as well; skipping this left reused accounts
 	// at whatever leverage they had previously selected (for example 20x).
 	if err := t.SetLeverage(symbol, leverage); err != nil {
-		if !isXyz {
-			return nil, err
-		}
-		logger.Warnf("  ⚠ Failed to set leverage for xyz dex asset %s: %v", coin, err)
+		return nil, err
+	}
+
+	// Preserve existing protective orders if leverage setup fails.
+	if err := t.CancelAllOrders(symbol); err != nil {
+		logger.Infof("  ⚠ Failed to cancel old pending orders: %v", err)
 	}
 
 	// Get current price (for market order)
@@ -120,11 +117,6 @@ func (t *HyperliquidTrader) OpenLong(symbol string, quantity float64, leverage i
 
 // OpenShort opens a short position (supports both crypto and xyz dex)
 func (t *HyperliquidTrader) OpenShort(symbol string, quantity float64, leverage int) (map[string]interface{}, error) {
-	// First cancel all pending orders for this coin
-	if err := t.CancelAllOrders(symbol); err != nil {
-		logger.Infof("  ⚠ Failed to cancel old pending orders: %v", err)
-	}
-
 	// Hyperliquid symbol format
 	coin := convertSymbolToHyperliquid(symbol)
 
@@ -135,10 +127,12 @@ func (t *HyperliquidTrader) OpenShort(symbol string, quantity float64, leverage 
 	// updates for HIP-3/XYZ perps as well; skipping this left reused accounts
 	// at whatever leverage they had previously selected (for example 20x).
 	if err := t.SetLeverage(symbol, leverage); err != nil {
-		if !isXyz {
-			return nil, err
-		}
-		logger.Warnf("  ⚠ Failed to set leverage for xyz dex asset %s: %v", coin, err)
+		return nil, err
+	}
+
+	// Preserve existing protective orders if leverage setup fails.
+	if err := t.CancelAllOrders(symbol); err != nil {
+		logger.Infof("  ⚠ Failed to cancel old pending orders: %v", err)
 	}
 
 	// Get current price
@@ -1148,14 +1142,9 @@ func (t *HyperliquidTrader) PlaceLimitOrder(req *types.LimitOrderRequest) (*type
 	coin := convertSymbolToHyperliquid(req.Symbol)
 
 	// Set leverage if specified.
-	isXyz := strings.HasPrefix(coin, "xyz:")
 	if req.Leverage > 0 {
 		if err := t.SetLeverage(req.Symbol, req.Leverage); err != nil {
-			if !isXyz {
-				logger.Warnf("[Hyperliquid] Failed to set leverage: %v", err)
-			} else {
-				logger.Warnf("[Hyperliquid] Failed to set xyz leverage for %s: %v", coin, err)
-			}
+			return nil, err
 		}
 	}
 

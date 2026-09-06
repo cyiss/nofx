@@ -176,8 +176,7 @@ func (a *GridTraderAdapter) PlaceLimitOrder(req *LimitOrderRequest) (*LimitOrder
 	// CRITICAL FIX: Set leverage before placing order
 	if req.Leverage > 0 {
 		if err := a.Trader.SetLeverage(req.Symbol, req.Leverage); err != nil {
-			logger.Warnf("[Grid] Failed to set leverage %dx: %v", req.Leverage, err)
-			// Continue anyway - some exchanges don't require explicit leverage setting
+			return nil, fmt.Errorf("failed to set grid leverage: %w", err)
 		}
 	}
 

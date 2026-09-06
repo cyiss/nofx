@@ -1,40 +1,32 @@
-# Railway All-in-One: Reuse existing GHCR images
-# Extract content from existing images and merge into a single container
+# Railway builds this checkout instead of fetching upstream application binaries.
+ARG GO_VERSION=1.26.8-alpine@sha256:ce864e7223ac17b1775e6fd0b4c0db580c2eb50e7953a427916379e4b92a1628
+ARG NODE_VERSION=22-alpine@sha256:c610fcdfb1d5b4740dd70c284ed3cb16bb857e0f7166196e36a5501df7a3aa32
+ARG ALPINE_VERSION=3.23@sha256:fd791d74b68913cbb027c6546007b3f0d3bc45125f797758156952bc2d6daf40
+FROM golang:${GO_VERSION} AS backend
+RUN apk add --no-cache gcc g++ musl-dev
+WORKDIR /app
+COPY go.mod go.sum ./
+RUN go mod download && go mod verify
+COPY . .
+RUN CGO_ENABLED=1 CGO_CFLAGS="-D_LARGEFILE64_SOURCE" go build -trimpath -ldflags="-s -w" -o nofx .
 
-# Extract binary from backend image
-FROM ghcr.io/nofxaios/nofx/nofx-backend:latest AS backend
+FROM node:${NODE_VERSION} AS frontend
+WORKDIR /build
+COPY web/package*.json ./
+RUN npm ci --ignore-scripts
+COPY web/ ./
+RUN npm run build
 
-# Extract static files from frontend image
-FROM ghcr.io/nofxaios/nofx/nofx-frontend:latest AS frontend
-
-# Final image
-FROM alpine:latest
-
+FROM alpine:${ALPINE_VERSION}
 RUN apk add --no-cache ca-certificates tzdata sqlite nginx openssl gettext
-
-# Copy backend binary
 COPY --from=backend /app/nofx /app/nofx
-
-# Copy TA-Lib libraries
-COPY --from=backend /usr/local/lib/libta_lib* /usr/local/lib/
-RUN ldconfig /usr/local/lib 2>/dev/null || true
-
-# Copy frontend static files
-COPY --from=frontend /usr/share/nginx/html /usr/share/nginx/html
-
+COPY --from=frontend /build/dist /usr/share/nginx/html
 WORKDIR /app
 RUN mkdir -p /app/data
-
-# Startup script (includes nginx config generation)
 COPY railway/start.sh /app/start.sh
 RUN chmod +x /app/start.sh
-
 ENV DB_PATH=/app/data/data.db
-
-# Railway automatically sets the PORT environment variable
 EXPOSE 8080
-
 HEALTHCHECK --interval=30s --timeout=10s --start-period=60s --retries=3 \
   CMD wget --no-verbose --tries=1 --spider http://localhost:${PORT:-8080}/health || exit 1
-
 CMD ["/app/start.sh"]

@@ -36,6 +36,9 @@ func NewServer(traderManager *manager.TraderManager, st *store.Store, cryptoServ
 	gin.SetMode(gin.ReleaseMode)
 
 	router := gin.Default()
+	// Direct peers are the only trusted source for rate-limit identities.
+	// Forwarding headers must not let clients select a new authentication bucket.
+	_ = router.SetTrustedProxies(nil)
 
 	// Enable CORS
 	router.Use(corsMiddleware())
@@ -199,7 +202,7 @@ func (s *Server) setupRoutes() {
 		protected := api.Group("/", s.authMiddleware())
 		{
 			// Logout (add to blacklist)
-			s.route(protected, "POST", "/logout", "Logout (blacklist token)", s.handleLogout)
+			s.route(protected, "POST", "/logout", "Logout (revoke all sessions)", s.handleLogout)
 			s.route(protected, "POST", "/onboarding/beginner", "Prepare beginner claw402 wallet and default model", s.handleBeginnerOnboarding)
 			s.route(protected, "GET", "/onboarding/beginner/current", "Get current beginner claw402 wallet", s.handleCurrentBeginnerWallet)
 
@@ -663,18 +666,20 @@ func (s *Server) authMiddleware() gin.HandlerFunc {
 
 		tokenString := tokenParts[1]
 
-		// Blacklist check
-		if auth.IsTokenBlacklisted(tokenString) {
-			c.JSON(http.StatusUnauthorized, gin.H{"error": "Token expired, please login again"})
-			c.Abort()
-			return
-		}
-
 		// Validate JWT token
 		claims, err := auth.ValidateJWT(tokenString)
 		if err != nil {
 			logger.Errorf("[Auth] Invalid token: %v", err)
 			c.JSON(http.StatusUnauthorized, gin.H{"error": "Invalid or expired token"})
+			c.Abort()
+			return
+		}
+
+		// Consult durable account state on every request. A revoked token must
+		// never regain access after restart, and deleted accounts cannot authenticate.
+		user, err := s.store.User().GetByID(claims.UserID)
+		if err != nil || user.SessionVersion != claims.SessionVersion {
+			c.JSON(http.StatusUnauthorized, gin.H{"error": "Session expired, please login again"})
 			c.Abort()
 			return
 		}
@@ -688,8 +693,12 @@ func (s *Server) authMiddleware() gin.HandlerFunc {
 
 // Start Start server
 func (s *Server) Start() error {
-	addr := fmt.Sprintf(":%d", s.port)
-	logger.Infof("🌐 API server starting at http://localhost%s", addr)
+	host := strings.TrimSpace(os.Getenv("API_SERVER_HOST"))
+	if host == "" {
+		host = "127.0.0.1"
+	}
+	addr := net.JoinHostPort(host, fmt.Sprintf("%d", s.port))
+	logger.Infof("🌐 API server starting at http://%s", addr)
 	logger.Infof("📊 API Documentation:")
 	logger.Infof("  • GET  /api/health           - Health check")
 	logger.Infof("  • GET  /api/traders          - Public AI trader leaderboard top 50 (no auth required)")

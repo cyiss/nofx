@@ -24,6 +24,10 @@ func (at *AutoTrader) checkTotalPositionLimit(symbol string, additionalValue flo
 	// Get current position value from exchange
 	currentPositionValue := 0.0
 	positions, err := at.trader.GetPositions()
+	if err != nil {
+		logger.Warnf("[Grid] Position limit unknown: %v", err)
+		return false, 0, maxTotalPositionValue
+	}
 	if err == nil {
 		for _, pos := range positions {
 			if sym, ok := pos["symbol"].(string); ok && sym == symbol {
@@ -265,6 +269,7 @@ func (at *AutoTrader) syncGridState() {
 	currentPositionSize := 0.0
 	if err != nil {
 		logger.Warnf("[Grid] Failed to get positions for state sync: %v", err)
+		return
 	} else {
 		for _, pos := range positions {
 			if sym, ok := pos["symbol"].(string); ok && sym == gridConfig.Symbol {

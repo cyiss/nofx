@@ -67,8 +67,8 @@ func New(apiPort int, botToken, userID string, getLLM func() mcp.AIClient, syste
 // GenerateBotToken creates a long-lived JWT for the bot's internal API calls.
 // userID must match the actual registered user's ID so bot-made changes
 // are visible in the frontend (shared user namespace).
-func GenerateBotToken(userID string) (string, error) {
-	return auth.GenerateJWT(userID, "bot@internal")
+func GenerateBotToken(userID string, sessionVersion uint64) (string, error) {
+	return auth.GenerateJWT(userID, "bot@internal", sessionVersion)
 }
 
 // buildAccountContext fetches the live account state (models, exchanges, strategies, traders,

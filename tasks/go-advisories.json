@@ -1,0 +1,1736 @@
+{
+  "checkedAt": "2026-09-06T15:49:39.799Z",
+  "source": "https://api.osv.dev/v1/querybatch",
+  "count": 98,
+  "findings": [
+    {
+      "package": {
+        "ecosystem": "Go",
+        "name": "golang.org/x/crypto"
+      },
+      "version": "v0.52.0",
+      "vulnerabilities": [
+        {
+          "id": "GO-2026-5932",
+          "modified": "2026-07-10T05:44:31.101996Z"
+        },
+        {
+          "id": "GO-2026-6303",
+          "modified": "2026-08-29T10:10:52.440319Z"
+        },
+        {
+          "id": "GO-2026-6354",
+          "modified": "2026-09-03T10:10:55.147673Z"
+        },
+        {
+          "id": "GO-2026-6355",
+          "modified": "2026-09-03T10:10:55.101133Z"
+        }
+      ]
+    },
+    {
+      "package": {
+        "ecosystem": "Go",
+        "name": "golang.org/x/net"
+      },
+      "version": "v0.55.0",
+      "vulnerabilities": [
+        {
+          "id": "GO-2026-5942",
+          "modified": "2026-08-17T12:25:32.471119Z"
+        }
+      ]
+    },
+    {
+      "package": {
+        "ecosystem": "Go",
+        "name": "golang.org/x/text"
+      },
+      "version": "v0.37.0",
+      "vulnerabilities": [
+        {
+          "id": "GO-2026-5970",
+          "modified": "2026-08-14T10:42:20.494473Z"
+        }
+      ]
+    },
+    {
+      "package": {
+        "ecosystem": "Go",
+        "name": "stdlib"
+      },
+      "version": "1.25.11",
+      "vulnerabilities": [
+        {
+          "id": "GO-2026-4970",
+          "modified": "2026-08-31T10:25:58.863192Z"
+        },
+        {
+          "id": "GO-2026-5026",
+          "modified": "2026-09-04T10:25:53.696614Z"
+        },
+        {
+          "id": "GO-2026-5856",
+          "modified": "2026-07-31T10:44:49.202644Z"
+        },
+        {
+          "id": "GO-2026-5972",
+          "modified": "2026-09-04T10:25:53.738918Z"
+        },
+        {
+          "id": "GO-2026-6088",
+          "modified": "2026-09-04T10:25:54.127263Z"
+        },
+        {
+          "id": "GO-2026-6089",
+          "modified": "2026-09-04T10:25:53.953505Z"
+        },
+        {
+          "id": "GO-2026-6090",
+          "modified": "2026-09-04T10:25:53.795664Z"
+        },
+        {
+          "id": "GO-2026-6091",
+          "modified": "2026-09-04T10:25:54.065812Z"
+        },
+        {
+          "id": "GO-2026-6218",
+          "modified": "2026-09-04T10:25:53.932791Z"
+        }
+      ]
+    }
+  ],
+  "details": [
+    {
+      "id": "GO-2026-5932",
+      "summary": "The golang.org/x/crypto/openpgp package is unmaintained, unsafe by design, and has known security issues",
+      "details": "The golang.org/x/crypto/openpgp package is unsafe by design, has numerous known security issues, is not maintained, and should not be used.\n\nIf you are required to interoperate with OpenPGP systems and need a maintained package, consider github.com/ProtonMail/go-crypto/openpgp which is a maintained fork that aims to be a drop-in replacement for this package.",
+      "modified": "2026-07-10T05:44:31.101996029Z",
+      "published": "2026-07-07T22:15:29Z",
+      "related": [
+        "CGA-485h-x96h-hqh7"
+      ],
+      "database_specific": {
+        "url": "https://pkg.go.dev/vuln/GO-2026-5932",
+        "review_status": "REVIEWED"
+      },
+      "references": [
+        {
+          "type": "REPORT",
+          "url": "https://go.dev/issue/44226"
+        }
+      ],
+      "affected": [
+        {
+          "package": {
+            "name": "golang.org/x/crypto",
+            "ecosystem": "Go",
+            "purl": "pkg:golang/golang.org/x/crypto"
+          },
+          "ranges": [
+            {
+              "type": "SEMVER",
+              "events": [
+                {
+                  "introduced": "0"
+                }
+              ]
+            }
+          ],
+          "ecosystem_specific": {
+            "imports": [
+              {
+                "path": "golang.org/x/crypto/openpgp"
+              },
+              {
+                "path": "golang.org/x/crypto/openpgp/packet"
+              },
+              {
+                "path": "golang.org/x/crypto/openpgp/armor"
+              },
+              {
+                "path": "golang.org/x/crypto/openpgp/clearsign"
+              },
+              {
+                "path": "golang.org/x/crypto/openpgp/errors"
+              },
+              {
+                "path": "golang.org/x/crypto/openpgp/elgamal"
+              },
+              {
+                "path": "golang.org/x/crypto/openpgp/s2k"
+              }
+            ]
+          },
+          "database_specific": {
+            "source": "https://vuln.go.dev/ID/GO-2026-5932.json"
+          }
+        }
+      ],
+      "schema_version": "1.7.5"
+    },
+    {
+      "id": "GO-2026-6303",
+      "summary": "Source-address critical option not enforced for non-public-key auth callbacks in golang.org/x/crypto/ssh",
+      "details": "The source-address critical option in the Permissions returned by an authentication callback was only enforced for the PublicKeyCallback and VerifiedPublicKeyCallback paths, extending the fix for CVE-2026-46595. Permissions returned by the PasswordCallback, KeyboardInteractiveCallback, NoClientAuthCallback, and GSSAPIWithMICConfig.AllowLogin callbacks were not validated against the client's remote address, so a source-address restriction set by those callbacks was silently ignored. The check is now applied to the Permissions returned by any authentication callback.",
+      "aliases": [
+        "CVE-2026-56854"
+      ],
+      "modified": "2026-08-29T10:10:52.440319762Z",
+      "published": "2026-08-28T14:47:45Z",
+      "related": [
+        "CGA-gppf-q4hh-4rj4"
+      ],
+      "database_specific": {
+        "url": "https://pkg.go.dev/vuln/GO-2026-6303",
+        "review_status": "REVIEWED"
+      },
+      "references": [
+        {
+          "type": "REPORT",
+          "url": "https://go.dev/issue/80213"
+        },
+        {
+          "type": "FIX",
+          "url": "https://go.dev/cl/797040"
+        }
+      ],
+      "affected": [
+        {
+          "package": {
+            "name": "golang.org/x/crypto",
+            "ecosystem": "Go",
+            "purl": "pkg:golang/golang.org/x/crypto"
+          },
+          "ranges": [
+            {
+              "type": "SEMVER",
+              "events": [
+                {
+                  "introduced": "0"
+                },
+                {
+                  "fixed": "0.55.0"
+                }
+              ]
+            }
+          ],
+          "ecosystem_specific": {
+            "imports": [
+              {
+                "symbols": [
+                  "NewServerConn",
+                  "connection.serverAuthenticate"
+                ],
+                "path": "golang.org/x/crypto/ssh"
+              }
+            ]
+          },
+          "database_specific": {
+            "source": "https://vuln.go.dev/ID/GO-2026-6303.json"
+          }
+        }
+      ],
+      "schema_version": "1.9.0",
+      "credits": [
+        {
+          "name": "Longwei Wang (@gn00295120)"
+        }
+      ]
+    },
+    {
+      "id": "GO-2026-6354",
+      "summary": "Prevent DoS on deadlocked undecided channel in golang.org/x/crypto/ssh",
+      "details": "Previously, a channel registered in the mux's chanList is not usable until it is established. A malicious peer was able flood the channel's incomingRequests, deadlocking the entire connection.\n\nNow, we add an atomic established state, set when a channel becomes usable. Until such a time, handlePacket drops every packet other than the open confirmation/failure, without blocking and without tearing down the connection.",
+      "aliases": [
+        "CVE-2026-78662"
+      ],
+      "modified": "2026-09-03T10:10:55.147673102Z",
+      "published": "2026-09-02T19:12:04Z",
+      "related": [
+        "CGA-r4x5-7v6j-hmfg"
+      ],
+      "database_specific": {
+        "review_status": "REVIEWED",
+        "url": "https://pkg.go.dev/vuln/GO-2026-6354"
+      },
+      "references": [
+        {
+          "type": "REPORT",
+          "url": "https://go.dev/issue/81316"
+        },
+        {
+          "type": "FIX",
+          "url": "https://go.dev/cl/826504"
+        },
+        {
+          "type": "WEB",
+          "url": "https://groups.google.com/g/golang-announce/c/1y3fb2np35U"
+        }
+      ],
+      "affected": [
+        {
+          "package": {
+            "name": "golang.org/x/crypto",
+            "ecosystem": "Go",
+            "purl": "pkg:golang/golang.org/x/crypto"
+          },
+          "ranges": [
+            {
+              "type": "SEMVER",
+              "events": [
+                {
+                  "introduced": "0"
+                },
+                {
+                  "fixed": "0.56.0"
+                }
+              ]
+            }
+          ],
+          "ecosystem_specific": {
+            "imports": [
+              {
+                "path": "golang.org/x/crypto/ssh",
+                "symbols": [
+                  "Dial",
+                  "NewClientConn",
+                  "NewControlClientConn",
+                  "NewServerConn",
+                  "channel.Accept",
+                  "channel.handlePacket",
+                  "channel.responseMessageReceived"
+                ]
+              }
+            ]
+          },
+          "database_specific": {
+            "source": "https://vuln.go.dev/ID/GO-2026-6354.json"
+          }
+        }
+      ],
+      "schema_version": "1.9.0",
+      "credits": [
+        {
+          "name": "Will Mortensen"
+        }
+      ]
+    },
+    {
+      "id": "GO-2026-6355",
+      "summary": "Prevent DoS on deadlocked established channel in golang.org/x/crypto/ssh",
+      "details": "Previously, after a channel has been established, a malicious peer could send crafted messages that would deadlock the entire connection.\n\nNow, we handle all RFC 4254 channel messages; global requests are handled explicitly. Then, treat all other messages as a protocol error and tear the connection down instead of buffering and blocking.",
+      "aliases": [
+        "CVE-2026-56855"
+      ],
+      "modified": "2026-09-03T10:10:55.101133330Z",
+      "published": "2026-09-02T19:12:04Z",
+      "related": [
+        "CGA-rfw9-vqmf-556m"
+      ],
+      "database_specific": {
+        "review_status": "REVIEWED",
+        "url": "https://pkg.go.dev/vuln/GO-2026-6355"
+      },
+      "references": [
+        {
+          "type": "REPORT",
+          "url": "https://go.dev/issue/81317"
+        },
+        {
+          "type": "FIX",
+          "url": "https://go.dev/cl/826524"
+        },
+        {
+          "type": "WEB",
+          "url": "https://groups.google.com/g/golang-announce/c/1y3fb2np35U"
+        }
+      ],
+      "affected": [
+        {
+          "package": {
+            "name": "golang.org/x/crypto",
+            "ecosystem": "Go",
+            "purl": "pkg:golang/golang.org/x/crypto"
+          },
+          "ranges": [
+            {
+              "type": "SEMVER",
+              "events": [
+                {
+                  "introduced": "0"
+                },
+                {
+                  "fixed": "0.56.0"
+                }
+              ]
+            }
+          ],
+          "ecosystem_specific": {
+            "imports": [
+              {
+                "path": "golang.org/x/crypto/ssh",
+                "symbols": [
+                  "Dial",
+                  "NewClientConn",
+                  "NewControlClientConn",
+                  "NewServerConn",
+                  "channel.handlePacket"
+                ]
+              }
+            ]
+          },
+          "database_specific": {
+            "source": "https://vuln.go.dev/ID/GO-2026-6355.json"
+          }
+        }
+      ],
+      "schema_version": "1.9.0",
+      "credits": [
+        {
+          "name": "Will Mortensen"
+        }
+      ]
+    },
+    {
+      "id": "GO-2026-5942",
+      "summary": "Parsing an invalid SVCB or HTTPS RR can panic in golang.org/x/net/dns/dnsmessage",
+      "details": "Parsing an invalid SVCB or HTTPS RR can panic when the size of a parameter value overflows the message buffer.",
+      "aliases": [
+        "BIT-golang-2026-46600",
+        "CVE-2026-46600"
+      ],
+      "modified": "2026-08-17T12:25:32.471119200Z",
+      "published": "2026-07-14T17:29:16Z",
+      "related": [
+        "CGA-6835-7pr2-x4gw"
+      ],
+      "database_specific": {
+        "review_status": "REVIEWED",
+        "url": "https://pkg.go.dev/vuln/GO-2026-5942"
+      },
+      "references": [
+        {
+          "type": "FIX",
+          "url": "https://go.dev/cl/786345"
+        },
+        {
+          "type": "REPORT",
+          "url": "https://go.dev/issue/79795"
+        },
+        {
+          "type": "WEB",
+          "url": "https://groups.google.com/g/golang-announce/c/94pEornpRlI"
+        }
+      ],
+      "affected": [
+        {
+          "package": {
+            "name": "stdlib",
+            "ecosystem": "Go",
+            "purl": "pkg:golang/stdlib"
+          },
+          "ranges": [
+            {
+              "type": "SEMVER",
+              "events": [
+                {
+                  "introduced": "1.26.0-0"
+                },
+                {
+                  "fixed": "1.26.6"
+                },
+                {
+                  "introduced": "1.27.0-0"
+                },
+                {
+                  "fixed": "1.27.0-rc.3"
+                }
+              ]
+            }
+          ],
+          "ecosystem_specific": {
+            "imports": [
+              {
+                "symbols": [
+                  "LookupCNAME",
+                  "Resolver.LookupCNAME",
+                  "cgoResSearch"
+                ],
+                "path": "net"
+              }
+            ]
+          },
+          "database_specific": {
+            "source": "https://vuln.go.dev/ID/GO-2026-5942.json"
+          }
+        },
+        {
+          "package": {
+            "name": "golang.org/x/net",
+            "ecosystem": "Go",
+            "purl": "pkg:golang/golang.org/x/net"
+          },
+          "ranges": [
+            {
+              "type": "SEMVER",
+              "events": [
+                {
+                  "introduced": "0"
+                },
+                {
+                  "fixed": "0.56.0"
+                }
+              ]
+            }
+          ],
+          "ecosystem_specific": {
+            "imports": [
+              {
+                "path": "golang.org/x/net/dns/dnsmessage",
+                "symbols": [
+                  "Message.Unpack",
+                  "Parser.Additional",
+                  "Parser.AllAdditionals",
+                  "Parser.AllAnswers",
+                  "Parser.AllAuthorities",
+                  "Parser.Answer",
+                  "Parser.Authority",
+                  "Parser.HTTPSResource",
+                  "Parser.SVCBResource",
+                  "unpackSVCBResource"
+                ]
+              }
+            ]
+          },
+          "database_specific": {
+            "source": "https://vuln.go.dev/ID/GO-2026-5942.json"
+          }
+        }
+      ],
+      "schema_version": "1.9.0",
+      "credits": [
+        {
+          "name": "Mundur (https://github.com/M0nd0R)"
+        }
+      ]
+    },
+    {
+      "id": "GO-2026-5970",
+      "summary": "Infinite loop on invalid input in golang.org/x/text",
+      "details": "A norm.Iter can enter an infinite loop when handling input containing invalid UTF-8 bytes.",
+      "aliases": [
+        "CVE-2026-56852"
+      ],
+      "modified": "2026-08-14T10:42:20.494473428Z",
+      "published": "2026-07-14T17:29:56Z",
+      "related": [
+        "CGA-jjqc-qfr4-frh9",
+        "RHSA-2026:40964",
+        "RHSA-2026:41020",
+        "RHSA-2026:42083",
+        "RHSA-2026:42230",
+        "RHSA-2026:42241",
+        "RHSA-2026:43015",
+        "RHSA-2026:43119",
+        "RHSA-2026:43311",
+        "RHSA-2026:43554",
+        "RHSA-2026:43581",
+        "RHSA-2026:43716",
+        "RHSA-2026:43797",
+        "RHSA-2026:43799",
+        "RHSA-2026:43801",
+        "RHSA-2026:43803",
+        "RHSA-2026:43852",
+        "RHSA-2026:43866",
+        "RHSA-2026:43873",
+        "RHSA-2026:43906",
+        "RHSA-2026:44151",
+        "RHSA-2026:44152",
+        "RHSA-2026:44162",
+        "RHSA-2026:44430",
+        "RHSA-2026:44451",
+        "RHSA-2026:44479",
+        "RHSA-2026:46953",
+        "RHSA-2026:46960",
+        "RHSA-2026:46988",
+        "RHSA-2026:48306",
+        "RHSA-2026:49317",
+        "RHSA-2026:49360",
+        "RHSA-2026:51065",
+        "RHSA-2026:52912",
+        "RHSA-2026:54364",
+        "RHSA-2026:54549"
+      ],
+      "database_specific": {
+        "review_status": "REVIEWED",
+        "url": "https://pkg.go.dev/vuln/GO-2026-5970"
+      },
+      "references": [
+        {
+          "type": "REPORT",
+          "url": "https://go.dev/issue/80142"
+        },
+        {
+          "type": "FIX",
+          "url": "https://go.dev/cl/794100"
+        }
+      ],
+      "affected": [
+        {
+          "package": {
+            "name": "golang.org/x/text",
+            "ecosystem": "Go",
+            "purl": "pkg:golang/golang.org/x/text"
+          },
+          "ranges": [
+            {
+              "type": "SEMVER",
+              "events": [
+                {
+                  "introduced": "0"
+                },
+                {
+                  "fixed": "0.39.0"
+                }
+              ]
+            }
+          ],
+          "ecosystem_specific": {
+            "imports": [
+              {
+                "symbols": [
+                  "Form.Append",
+                  "Form.AppendString",
+                  "Form.Bytes",
+                  "Form.FirstBoundary",
+                  "Form.FirstBoundaryInString",
+                  "Form.IsNormal",
+                  "Form.IsNormalString",
+                  "Form.LastBoundary",
+                  "Form.NextBoundary",
+                  "Form.NextBoundaryInString",
+                  "Form.Properties",
+                  "Form.PropertiesString",
+                  "Form.QuickSpan",
+                  "Form.QuickSpanString",
+                  "Form.Span",
+                  "Form.SpanString",
+                  "Form.String",
+                  "Form.Transform",
+                  "Iter.Init",
+                  "Iter.InitString",
+                  "Iter.Next",
+                  "Iter.Seek",
+                  "nextComposed",
+                  "normReader.Read",
+                  "normWriter.Write"
+                ],
+                "path": "golang.org/x/text/unicode/norm"
+              }
+            ]
+          },
+          "database_specific": {
+            "source": "https://vuln.go.dev/ID/GO-2026-5970.json"
+          }
+        }
+      ],
+      "schema_version": "1.8.0",
+      "credits": [
+        {
+          "name": "Viky Choi (\"vikychoi\" on GitHub)"
+        }
+      ]
+    },
+    {
+      "id": "GO-2026-4970",
+      "summary": "Root escape via symlink plus trailing slash in os",
+      "details": "On Unix systems, opening a file in an os.Root improperly follows symlinks to locations outside of the Root when the final path component of the a path is a symbolic link and the path ends in /.\n\nFor example, 'root.Open(\"symlink/\")' will open \"symlink\" even when \"symlink\" is a symbolic link pointing outside of the root.",
+      "aliases": [
+        "BIT-golang-2026-39822",
+        "CVE-2026-39822"
+      ],
+      "modified": "2026-08-31T10:25:58.863192906Z",
+      "published": "2026-07-07T21:34:47Z",
+      "related": [
+        "CGA-8r5h-83c2-4rxw",
+        "RHSA-2026:36477",
+        "RHSA-2026:36510",
+        "RHSA-2026:37435",
+        "RHSA-2026:37436",
+        "RHSA-2026:38493",
+        "RHSA-2026:38494",
+        "RHSA-2026:38495",
+        "RHSA-2026:38878",
+        "RHSA-2026:38995",
+        "RHSA-2026:49702",
+        "RHSA-2026:49712",
+        "RHSA-2026:57361",
+        "RHSA-2026:57649",
+        "RHSA-2026:61253"
+      ],
+      "database_specific": {
+        "review_status": "REVIEWED",
+        "url": "https://pkg.go.dev/vuln/GO-2026-4970"
+      },
+      "references": [
+        {
+          "type": "REPORT",
+          "url": "https://go.dev/issue/79005"
+        },
+        {
+          "type": "WEB",
+          "url": "https://groups.google.com/g/golang-announce/c/OrmQE_Yp5Sc"
+        },
+        {
+          "type": "FIX",
+          "url": "https://go.dev/cl/797880"
+        }
+      ],
+      "affected": [
+        {
+          "package": {
+            "name": "stdlib",
+            "ecosystem": "Go",
+            "purl": "pkg:golang/stdlib"
+          },
+          "ranges": [
+            {
+              "type": "SEMVER",
+              "events": [
+                {
+                  "introduced": "0"
+                },
+                {
+                  "fixed": "1.25.12"
+                },
+                {
+                  "introduced": "1.26.0-0"
+                },
+                {
+                  "fixed": "1.26.5"
+                },
+                {
+                  "introduced": "1.27.0-0"
+                },
+                {
+                  "fixed": "1.27.0-rc.2"
+                }
+              ]
+            }
+          ],
+          "ecosystem_specific": {
+            "imports": [
+              {
+                "symbols": [
+                  "OpenInRoot",
+                  "Root.Create",
+                  "Root.Open",
+                  "Root.OpenFile",
+                  "Root.OpenRoot",
+                  "Root.ReadFile",
+                  "Root.WriteFile",
+                  "openRootInRoot",
+                  "rootFS.Open",
+                  "rootFS.ReadDir",
+                  "rootFS.ReadFile",
+                  "rootOpenFileNolog"
+                ],
+                "path": "os"
+              }
+            ]
+          },
+          "database_specific": {
+            "source": "https://vuln.go.dev/ID/GO-2026-4970.json"
+          }
+        }
+      ],
+      "schema_version": "1.7.5",
+      "credits": [
+        {
+          "name": "Mundur (https://github.com/M0nd0R)"
+        }
+      ]
+    },
+    {
+      "id": "GO-2026-5026",
+      "summary": "Invoking failure to reject ASCII-only Punycode-encoded labels in golang.org/x/net/idna",
+      "details": "The ToASCII and ToUnicode functions incorrectly accept Punycode-encoded labels that decode to an ASCII-only label. For example, ToUnicode(\"xn--example-.com\") incorrectly returns the name \"example.com\" rather than an error.\n\nThis behavior can lead to privilege escalation in programs using the idna package. For example, a program which performs privilege checks on the ASCII hostname may reject \"example.com\" but permit \"xn--example-.com\". If that program subsequently converts the ASCII hostname to Unicode, it will inadvertently permits access to the Unicode name \"example.com\".",
+      "aliases": [
+        "CVE-2026-39821"
+      ],
+      "modified": "2026-09-04T10:25:53.696614612Z",
+      "published": "2026-05-22T02:46:43Z",
+      "related": [
+        "CGA-frmm-xgw5-xmhr",
+        "RHSA-2026:23262",
+        "RHSA-2026:23264",
+        "RHSA-2026:30853",
+        "RHSA-2026:30854",
+        "RHSA-2026:30855",
+        "RHSA-2026:34357",
+        "RHSA-2026:34359",
+        "RHSA-2026:34789",
+        "RHSA-2026:35826",
+        "RHSA-2026:35827",
+        "RHSA-2026:35828",
+        "RHSA-2026:35829",
+        "RHSA-2026:35830",
+        "RHSA-2026:35831",
+        "RHSA-2026:36796",
+        "RHSA-2026:37435",
+        "RHSA-2026:37436",
+        "RHSA-2026:38995",
+        "RHSA-2026:39005",
+        "RHSA-2026:39573",
+        "RHSA-2026:39879",
+        "RHSA-2026:41019",
+        "RHSA-2026:41930",
+        "RHSA-2026:42078",
+        "RHSA-2026:42079",
+        "RHSA-2026:42080",
+        "RHSA-2026:42082",
+        "RHSA-2026:42150",
+        "RHSA-2026:42151",
+        "RHSA-2026:42240",
+        "RHSA-2026:46395",
+        "RHSA-2026:49702",
+        "RHSA-2026:49712",
+        "RHSA-2026:51112",
+        "RHSA-2026:51187",
+        "RHSA-2026:52826",
+        "RHSA-2026:53374",
+        "RHSA-2026:53412",
+        "RHSA-2026:53413",
+        "RHSA-2026:53415",
+        "RHSA-2026:54191",
+        "RHSA-2026:54401",
+        "RHSA-2026:54580",
+        "RHSA-2026:54757",
+        "RHSA-2026:56143",
+        "RHSA-2026:56223",
+        "RHSA-2026:57541",
+        "RHSA-2026:57649",
+        "RHSA-2026:57845",
+        "RHSA-2026:59546",
+        "RHSA-2026:59549",
+        "RHSA-2026:59562",
+        "RHSA-2026:60315",
+        "RHSA-2026:60354",
+        "RHSA-2026:61245",
+        "RHSA-2026:61253",
+        "RHSA-2026:63134"
+      ],
+      "database_specific": {
+        "review_status": "REVIEWED",
+        "url": "https://pkg.go.dev/vuln/GO-2026-5026"
+      },
+      "references": [
+        {
+          "type": "FIX",
+          "url": "https://go.dev/cl/767220"
+        },
+        {
+          "type": "REPORT",
+          "url": "https://go.dev/issue/78760"
+        },
+        {
+          "type": "WEB",
+          "url": "https://groups.google.com/g/golang-announce/c/iI-mYSI0lu8"
+        },
+        {
+          "type": "WEB",
+          "url": "https://groups.google.com/g/golang-announce/c/94pEornpRlI"
+        }
+      ],
+      "affected": [
+        {
+          "package": {
+            "name": "stdlib",
+            "ecosystem": "Go",
+            "purl": "pkg:golang/stdlib"
+          },
+          "ranges": [
+            {
+              "type": "SEMVER",
+              "events": [
+                {
+                  "introduced": "0"
+                },
+                {
+                  "fixed": "1.25.13"
+                },
+                {
+                  "introduced": "1.26.0-0"
+                },
+                {
+                  "fixed": "1.26.6"
+                },
+                {
+                  "introduced": "1.27.0-0"
+                },
+                {
+                  "fixed": "1.27.0-rc.3"
+                }
+              ]
+            }
+          ],
+          "ecosystem_specific": {
+            "imports": [
+              {
+                "path": "net/http",
+                "symbols": [
+                  "Client.CloseIdleConnections",
+                  "Client.Do",
+                  "Client.Get",
+                  "Client.Head",
+                  "Client.Post",
+                  "Client.PostForm",
+                  "ClientConn.Close",
+                  "ClientConn.RoundTrip",
+                  "Get",
+                  "Head",
+                  "Post",
+                  "PostForm",
+                  "Transport.CloseIdleConnections",
+                  "Transport.NewClientConn",
+                  "Transport.RoundTrip",
+                  "http1ClientConn.Close",
+                  "http1ClientConn.RoundTrip",
+                  "http2ClientConn.RoundTrip",
+                  "http2RoundTripper.RoundTrip",
+                  "idnaASCII"
+                ]
+              },
+              {
+                "symbols": [
+                  "Transport.AddConn",
+                  "Transport.RoundTrip",
+                  "Transport.RoundTripOpt",
+                  "authorityAddr"
+                ],
+                "path": "net/http/internal/http2"
+              }
+            ]
+          },
+          "database_specific": {
+            "source": "https://vuln.go.dev/ID/GO-2026-5026.json"
+          }
+        },
+        {
+          "package": {
+            "name": "golang.org/x/net",
+            "ecosystem": "Go",
+            "purl": "pkg:golang/golang.org/x/net"
+          },
+          "ranges": [
+            {
+              "type": "SEMVER",
+              "events": [
+                {
+                  "introduced": "0"
+                },
+                {
+                  "fixed": "0.55.0"
+                }
+              ]
+            }
+          ],
+          "ecosystem_specific": {
+            "imports": [
+              {
+                "symbols": [
+                  "Profile.ToASCII",
+                  "Profile.ToUnicode",
+                  "Profile.process",
+                  "ToASCII",
+                  "ToUnicode"
+                ],
+                "path": "golang.org/x/net/idna"
+              }
+            ]
+          },
+          "database_specific": {
+            "source": "https://vuln.go.dev/ID/GO-2026-5026.json"
+          }
+        }
+      ],
+      "schema_version": "1.9.0",
+      "credits": [
+        {
+          "name": "KC1zs4 (https://github.com/KC1zs4)"
+        },
+        {
+          "name": "Longwei Wang (https://github.com/gn00295120)"
+        }
+      ]
+    },
+    {
+      "id": "GO-2026-5856",
+      "summary": "Invoking Encrypted Client Hello privacy leak in crypto/tls",
+      "details": "Handshakes which used Encrypted Client Hello could be de-anonymized by a passive network observer due to a disclosure of pre-shared key identities in the unencrypted client hello.",
+      "aliases": [
+        "BIT-golang-2026-42505",
+        "CVE-2026-42505"
+      ],
+      "modified": "2026-07-31T10:44:49.202644503Z",
+      "published": "2026-07-07T21:34:47Z",
+      "related": [
+        "CGA-c2qp-qchh-369w",
+        "RHSA-2026:36477",
+        "RHSA-2026:36510",
+        "RHSA-2026:37435",
+        "RHSA-2026:37436",
+        "RHSA-2026:38995"
+      ],
+      "database_specific": {
+        "url": "https://pkg.go.dev/vuln/GO-2026-5856",
+        "review_status": "REVIEWED"
+      },
+      "references": [
+        {
+          "type": "FIX",
+          "url": "https://go.dev/cl/775960"
+        },
+        {
+          "type": "REPORT",
+          "url": "https://go.dev/issue/79282"
+        },
+        {
+          "type": "WEB",
+          "url": "https://groups.google.com/g/golang-announce/c/OrmQE_Yp5Sc"
+        }
+      ],
+      "affected": [
+        {
+          "package": {
+            "name": "stdlib",
+            "ecosystem": "Go",
+            "purl": "pkg:golang/stdlib"
+          },
+          "ranges": [
+            {
+              "type": "SEMVER",
+              "events": [
+                {
+                  "introduced": "0"
+                },
+                {
+                  "fixed": "1.25.12"
+                },
+                {
+                  "introduced": "1.26.0-0"
+                },
+                {
+                  "fixed": "1.26.5"
+                },
+                {
+                  "introduced": "1.27.0-0"
+                },
+                {
+                  "fixed": "1.27.0-rc.2"
+                }
+              ]
+            }
+          ],
+          "ecosystem_specific": {
+            "imports": [
+              {
+                "path": "crypto/tls",
+                "symbols": [
+                  "Conn.Handshake",
+                  "Conn.HandshakeContext",
+                  "Conn.Read",
+                  "Conn.Write",
+                  "Dial",
+                  "DialWithDialer",
+                  "Dialer.Dial",
+                  "Dialer.DialContext",
+                  "QUICConn.HandleData",
+                  "QUICConn.SendSessionTicket",
+                  "QUICConn.Start",
+                  "clientHelloMsg.marshalMsg"
+                ]
+              }
+            ]
+          },
+          "database_specific": {
+            "source": "https://vuln.go.dev/ID/GO-2026-5856.json"
+          }
+        }
+      ],
+      "schema_version": "1.7.5",
+      "credits": [
+        {
+          "name": "Coia Prant (github.com/rbqvq)"
+        }
+      ]
+    },
+    {
+      "id": "GO-2026-5972",
+      "summary": "Enforce maximum recursion depth in encoding/asn1",
+      "details": "Enforce a recursion limit in Unmarshal to prevent stack exhaustion when parsing deeply-nested, recursive structures.",
+      "aliases": [
+        "BIT-golang-2026-33818",
+        "CVE-2026-33818"
+      ],
+      "modified": "2026-09-04T10:25:53.738918974Z",
+      "published": "2026-08-13T21:43:54Z",
+      "related": [
+        "CGA-qffm-j2p3-c942",
+        "RHSA-2026:54835",
+        "RHSA-2026:54836",
+        "RHSA-2026:60304",
+        "RHSA-2026:60305",
+        "RHSA-2026:60306",
+        "RHSA-2026:61882",
+        "RHSA-2026:62404",
+        "RHSA-2026:62405",
+        "RHSA-2026:62406",
+        "RHSA-2026:62407",
+        "RHSA-2026:62577",
+        "RHSA-2026:62578",
+        "RHSA-2026:62602",
+        "RHSA-2026:62631",
+        "RHSA-2026:62753",
+        "RHSA-2026:62754",
+        "RHSA-2026:62803",
+        "RHSA-2026:63022",
+        "RHSA-2026:63119",
+        "RHSA-2026:63124",
+        "RHSA-2026:63127",
+        "RHSA-2026:63130",
+        "RHSA-2026:63136",
+        "RHSA-2026:63163",
+        "RHSA-2026:63332"
+      ],
+      "database_specific": {
+        "review_status": "REVIEWED",
+        "url": "https://pkg.go.dev/vuln/GO-2026-5972"
+      },
+      "references": [
+        {
+          "type": "REPORT",
+          "url": "https://go.dev/issue/80405"
+        },
+        {
+          "type": "WEB",
+          "url": "https://groups.google.com/g/golang-announce/c/94pEornpRlI"
+        },
+        {
+          "type": "FIX",
+          "url": "https://go.dev/cl/814980"
+        }
+      ],
+      "affected": [
+        {
+          "package": {
+            "name": "stdlib",
+            "ecosystem": "Go",
+            "purl": "pkg:golang/stdlib"
+          },
+          "ranges": [
+            {
+              "type": "SEMVER",
+              "events": [
+                {
+                  "introduced": "0"
+                },
+                {
+                  "fixed": "1.25.13"
+                },
+                {
+                  "introduced": "1.26.0-0"
+                },
+                {
+                  "fixed": "1.26.6"
+                },
+                {
+                  "introduced": "1.27.0-0"
+                },
+                {
+                  "fixed": "1.27.0-rc.3"
+                }
+              ]
+            }
+          ],
+          "ecosystem_specific": {
+            "imports": [
+              {
+                "path": "encoding/asn1",
+                "symbols": [
+                  "Unmarshal",
+                  "UnmarshalWithParams",
+                  "parseField",
+                  "parseSequenceOf"
+                ]
+              }
+            ]
+          },
+          "database_specific": {
+            "source": "https://vuln.go.dev/ID/GO-2026-5972.json"
+          }
+        }
+      ],
+      "schema_version": "1.9.0",
+      "credits": [
+        {
+          "name": "Marwan Atia (marwansamir688@gmail.com) "
+        }
+      ]
+    },
+    {
+      "id": "GO-2026-6088",
+      "summary": "Add recursion depth guard during decode in encoding/xml",
+      "details": "Previously, DecodeElement would reset the depth counter causing it to never fire; this could lead to stack exhaustion.",
+      "aliases": [
+        "BIT-golang-2026-56859",
+        "CVE-2026-56859"
+      ],
+      "modified": "2026-09-04T10:25:54.127263378Z",
+      "published": "2026-08-13T21:43:54Z",
+      "related": [
+        "CGA-6mxx-fmwg-96cr",
+        "RHSA-2026:54835",
+        "RHSA-2026:54836",
+        "RHSA-2026:57415",
+        "RHSA-2026:60304",
+        "RHSA-2026:60305",
+        "RHSA-2026:60306",
+        "RHSA-2026:61882",
+        "RHSA-2026:62404",
+        "RHSA-2026:62405",
+        "RHSA-2026:62406",
+        "RHSA-2026:62407",
+        "RHSA-2026:62602",
+        "RHSA-2026:62631",
+        "RHSA-2026:62753",
+        "RHSA-2026:62754",
+        "RHSA-2026:62803",
+        "RHSA-2026:63022",
+        "RHSA-2026:63163"
+      ],
+      "database_specific": {
+        "url": "https://pkg.go.dev/vuln/GO-2026-6088",
+        "review_status": "REVIEWED"
+      },
+      "references": [
+        {
+          "type": "REPORT",
+          "url": "https://go.dev/issue/80481"
+        },
+        {
+          "type": "FIX",
+          "url": "https://go.dev/cl/803320"
+        },
+        {
+          "type": "WEB",
+          "url": "https://groups.google.com/g/golang-announce/c/94pEornpRlI"
+        }
+      ],
+      "affected": [
+        {
+          "package": {
+            "name": "stdlib",
+            "ecosystem": "Go",
+            "purl": "pkg:golang/stdlib"
+          },
+          "ranges": [
+            {
+              "type": "SEMVER",
+              "events": [
+                {
+                  "introduced": "0"
+                },
+                {
+                  "fixed": "1.25.13"
+                },
+                {
+                  "introduced": "1.26.0-0"
+                },
+                {
+                  "fixed": "1.26.6"
+                },
+                {
+                  "introduced": "1.27.0-0"
+                },
+                {
+                  "fixed": "1.27.0-rc.3"
+                }
+              ]
+            }
+          ],
+          "ecosystem_specific": {
+            "imports": [
+              {
+                "symbols": [
+                  "Decoder.Decode",
+                  "Decoder.DecodeElement",
+                  "Decoder.RawToken",
+                  "Decoder.Skip",
+                  "Decoder.Token",
+                  "Decoder.pop",
+                  "Decoder.push",
+                  "Decoder.unmarshal",
+                  "Decoder.unmarshalPath",
+                  "Unmarshal"
+                ],
+                "path": "encoding/xml"
+              }
+            ]
+          },
+          "database_specific": {
+            "source": "https://vuln.go.dev/ID/GO-2026-6088.json"
+          }
+        }
+      ],
+      "schema_version": "1.9.0"
+    },
+    {
+      "id": "GO-2026-6089",
+      "summary": "Apply ReadHeaderTimeout when doing unencrypted HTTP/2 check in net/http",
+      "details": "When a server is configured to support unencrypted HTTP/2, it reads a few bytes from each new connection to see if they contain the HTTP/2 client preface. ReadHeaderTimeout is unexpectedly not being applied when doing this.",
+      "aliases": [
+        "BIT-golang-2026-56853",
+        "CVE-2026-56853"
+      ],
+      "modified": "2026-09-04T10:25:53.953505103Z",
+      "published": "2026-08-13T21:43:54Z",
+      "related": [
+        "CGA-gx4x-f625-2c45",
+        "RHSA-2026:54835",
+        "RHSA-2026:54836",
+        "RHSA-2026:60304",
+        "RHSA-2026:60305",
+        "RHSA-2026:60306",
+        "RHSA-2026:61882",
+        "RHSA-2026:62404",
+        "RHSA-2026:62405",
+        "RHSA-2026:62406",
+        "RHSA-2026:62407",
+        "RHSA-2026:62578",
+        "RHSA-2026:62602",
+        "RHSA-2026:62631",
+        "RHSA-2026:62753",
+        "RHSA-2026:62754",
+        "RHSA-2026:62803",
+        "RHSA-2026:63022",
+        "RHSA-2026:63119",
+        "RHSA-2026:63124",
+        "RHSA-2026:63163",
+        "RHSA-2026:63332"
+      ],
+      "database_specific": {
+        "review_status": "REVIEWED",
+        "url": "https://pkg.go.dev/vuln/GO-2026-6089"
+      },
+      "references": [
+        {
+          "type": "REPORT",
+          "url": "https://go.dev/issue/80205"
+        },
+        {
+          "type": "FIX",
+          "url": "https://go.dev/cl/795540"
+        },
+        {
+          "type": "WEB",
+          "url": "https://groups.google.com/g/golang-announce/c/94pEornpRlI"
+        }
+      ],
+      "affected": [
+        {
+          "package": {
+            "name": "stdlib",
+            "ecosystem": "Go",
+            "purl": "pkg:golang/stdlib"
+          },
+          "ranges": [
+            {
+              "type": "SEMVER",
+              "events": [
+                {
+                  "introduced": "0"
+                },
+                {
+                  "fixed": "1.25.13"
+                },
+                {
+                  "introduced": "1.26.0-0"
+                },
+                {
+                  "fixed": "1.26.6"
+                },
+                {
+                  "introduced": "1.27.0-0"
+                },
+                {
+                  "fixed": "1.27.0-rc.3"
+                }
+              ]
+            }
+          ],
+          "ecosystem_specific": {
+            "imports": [
+              {
+                "symbols": [
+                  "ListenAndServe",
+                  "ListenAndServeTLS",
+                  "Serve",
+                  "ServeTLS",
+                  "Server.ListenAndServe",
+                  "Server.ListenAndServeTLS",
+                  "Server.Serve",
+                  "Server.ServeTLS",
+                  "conn.readRequest",
+                  "conn.serve"
+                ],
+                "path": "net/http"
+              }
+            ]
+          },
+          "database_specific": {
+            "source": "https://vuln.go.dev/ID/GO-2026-6089.json"
+          }
+        }
+      ],
+      "schema_version": "1.9.0"
+    },
+    {
+      "id": "GO-2026-6090",
+      "summary": "Limit handshake messages we are willing to accept post-handshake in crypto/tls",
+      "details": "Handshake messages, such as KeyUpdate, are always considered as state-advancing, regardless of whether a handshake has been completed or not. As a result, a malicious client can keep sending KeyUpdate messages to force the server to keep performing key derivation operations indefinitely.",
+      "aliases": [
+        "BIT-golang-2026-56862",
+        "CVE-2026-56862"
+      ],
+      "modified": "2026-09-04T10:25:53.795664954Z",
+      "published": "2026-08-13T21:43:54Z",
+      "related": [
+        "CGA-j6x6-9m4j-6xmr",
+        "RHSA-2026:54835",
+        "RHSA-2026:54836",
+        "RHSA-2026:60304",
+        "RHSA-2026:60305",
+        "RHSA-2026:60306",
+        "RHSA-2026:61882",
+        "RHSA-2026:62404",
+        "RHSA-2026:62405",
+        "RHSA-2026:62406",
+        "RHSA-2026:62407",
+        "RHSA-2026:62577",
+        "RHSA-2026:62578",
+        "RHSA-2026:62602",
+        "RHSA-2026:62631",
+        "RHSA-2026:62753",
+        "RHSA-2026:62754",
+        "RHSA-2026:62803",
+        "RHSA-2026:63022",
+        "RHSA-2026:63119",
+        "RHSA-2026:63124",
+        "RHSA-2026:63127",
+        "RHSA-2026:63130",
+        "RHSA-2026:63136",
+        "RHSA-2026:63163",
+        "RHSA-2026:63332"
+      ],
+      "database_specific": {
+        "url": "https://pkg.go.dev/vuln/GO-2026-6090",
+        "review_status": "REVIEWED"
+      },
+      "references": [
+        {
+          "type": "REPORT",
+          "url": "https://go.dev/issue/80528"
+        },
+        {
+          "type": "FIX",
+          "url": "https://go.dev/cl/804261"
+        },
+        {
+          "type": "WEB",
+          "url": "https://groups.google.com/g/golang-announce/c/94pEornpRlI"
+        }
+      ],
+      "affected": [
+        {
+          "package": {
+            "name": "stdlib",
+            "ecosystem": "Go",
+            "purl": "pkg:golang/stdlib"
+          },
+          "ranges": [
+            {
+              "type": "SEMVER",
+              "events": [
+                {
+                  "introduced": "0"
+                },
+                {
+                  "fixed": "1.25.13"
+                },
+                {
+                  "introduced": "1.26.0-0"
+                },
+                {
+                  "fixed": "1.26.6"
+                },
+                {
+                  "introduced": "1.27.0-0"
+                },
+                {
+                  "fixed": "1.27.0-rc.3"
+                }
+              ]
+            }
+          ],
+          "ecosystem_specific": {
+            "imports": [
+              {
+                "symbols": [
+                  "Conn.Handshake",
+                  "Conn.HandshakeContext",
+                  "Conn.Read",
+                  "Conn.Write",
+                  "Conn.readRecordOrCCS",
+                  "Dial",
+                  "DialWithDialer",
+                  "Dialer.Dial",
+                  "Dialer.DialContext",
+                  "QUICConn.HandleData",
+                  "QUICConn.Start"
+                ],
+                "path": "crypto/tls"
+              }
+            ]
+          },
+          "database_specific": {
+            "source": "https://vuln.go.dev/ID/GO-2026-6090.json"
+          }
+        }
+      ],
+      "schema_version": "1.9.0",
+      "credits": [
+        {
+          "name": "Qi Deng of Aurascape.ai"
+        }
+      ]
+    },
+    {
+      "id": "GO-2026-6091",
+      "summary": "Fix Javascript regexp context tracking in html/template",
+      "details": "Previously, pathological inputs could close an unescaped '/' early, allowing for attack-controlled data to inject arbitrary content, potentially leading to XSS.",
+      "aliases": [
+        "BIT-golang-2026-56858",
+        "CVE-2026-56858"
+      ],
+      "modified": "2026-09-04T10:25:54.065812167Z",
+      "published": "2026-08-13T21:43:54Z",
+      "related": [
+        "CGA-rch4-p96c-xj2v",
+        "RHSA-2026:54835",
+        "RHSA-2026:54836",
+        "RHSA-2026:60304",
+        "RHSA-2026:60305",
+        "RHSA-2026:60306",
+        "RHSA-2026:61882",
+        "RHSA-2026:62404",
+        "RHSA-2026:62405",
+        "RHSA-2026:62406",
+        "RHSA-2026:62407",
+        "RHSA-2026:62602",
+        "RHSA-2026:62753",
+        "RHSA-2026:62754",
+        "RHSA-2026:62803",
+        "RHSA-2026:63022",
+        "RHSA-2026:63119",
+        "RHSA-2026:63124",
+        "RHSA-2026:63130",
+        "RHSA-2026:63136",
+        "RHSA-2026:63163",
+        "RHSA-2026:63332"
+      ],
+      "database_specific": {
+        "review_status": "REVIEWED",
+        "url": "https://pkg.go.dev/vuln/GO-2026-6091"
+      },
+      "references": [
+        {
+          "type": "REPORT",
+          "url": "https://go.dev/issue/80435"
+        },
+        {
+          "type": "FIX",
+          "url": "https://go.dev/cl/807100"
+        },
+        {
+          "type": "WEB",
+          "url": "https://groups.google.com/g/golang-announce/c/94pEornpRlI"
+        }
+      ],
+      "affected": [
+        {
+          "package": {
+            "name": "stdlib",
+            "ecosystem": "Go",
+            "purl": "pkg:golang/stdlib"
+          },
+          "ranges": [
+            {
+              "type": "SEMVER",
+              "events": [
+                {
+                  "introduced": "0"
+                },
+                {
+                  "fixed": "1.25.13"
+                },
+                {
+                  "introduced": "1.26.0-0"
+                },
+                {
+                  "fixed": "1.26.6"
+                },
+                {
+                  "introduced": "1.27.0-0"
+                },
+                {
+                  "fixed": "1.27.0-rc.3"
+                }
+              ]
+            }
+          ],
+          "ecosystem_specific": {
+            "imports": [
+              {
+                "symbols": [
+                  "Template.Execute",
+                  "Template.ExecuteTemplate",
+                  "tJS"
+                ],
+                "path": "html/template"
+              }
+            ]
+          },
+          "database_specific": {
+            "source": "https://vuln.go.dev/ID/GO-2026-6091.json"
+          }
+        }
+      ],
+      "schema_version": "1.9.0",
+      "credits": [
+        {
+          "name": "Ali Sherif"
+        }
+      ]
+    },
+    {
+      "id": "GO-2026-6218",
+      "summary": "Avoid quadratic complexity in resolvePath in net/url",
+      "details": "Previously, resolving relative paths containing parent directory ('..') segments performed string conversions and buffer rewrites on each step, resulting in quadratic time complexity and high memory allocation overhead.\n\nNow, path resolution operates on a byte buffer using index-based backtracking for '..' segments, eliminating the quadratic time complexity and significantly reducing memory allocations.",
+      "aliases": [
+        "BIT-golang-2026-56860",
+        "CVE-2026-56860"
+      ],
+      "modified": "2026-09-04T10:25:53.932791320Z",
+      "published": "2026-08-13T21:43:54Z",
+      "related": [
+        "CGA-9mpc-jg3h-hrj4",
+        "RHSA-2026:54835",
+        "RHSA-2026:54836",
+        "RHSA-2026:60304",
+        "RHSA-2026:60305",
+        "RHSA-2026:60306",
+        "RHSA-2026:61882",
+        "RHSA-2026:62404",
+        "RHSA-2026:62405",
+        "RHSA-2026:62406",
+        "RHSA-2026:62407",
+        "RHSA-2026:62577",
+        "RHSA-2026:62578",
+        "RHSA-2026:62602",
+        "RHSA-2026:62631",
+        "RHSA-2026:62753",
+        "RHSA-2026:62754",
+        "RHSA-2026:62803",
+        "RHSA-2026:63022",
+        "RHSA-2026:63119",
+        "RHSA-2026:63124",
+        "RHSA-2026:63127",
+        "RHSA-2026:63130",
+        "RHSA-2026:63136",
+        "RHSA-2026:63163",
+        "RHSA-2026:63332"
+      ],
+      "database_specific": {
+        "url": "https://pkg.go.dev/vuln/GO-2026-6218",
+        "review_status": "REVIEWED"
+      },
+      "references": [
+        {
+          "type": "FIX",
+          "url": "https://go.dev/cl/803681"
+        },
+        {
+          "type": "REPORT",
+          "url": "https://go.dev/issue/80494"
+        },
+        {
+          "type": "WEB",
+          "url": "https://groups.google.com/g/golang-announce/c/94pEornpRlI"
+        }
+      ],
+      "affected": [
+        {
+          "package": {
+            "name": "stdlib",
+            "ecosystem": "Go",
+            "purl": "pkg:golang/stdlib"
+          },
+          "ranges": [
+            {
+              "type": "SEMVER",
+              "events": [
+                {
+                  "introduced": "0"
+                },
+                {
+                  "fixed": "1.25.13"
+                },
+                {
+                  "introduced": "1.26.0-0"
+                },
+                {
+                  "fixed": "1.26.6"
+                },
+                {
+                  "introduced": "1.27.0-0"
+                },
+                {
+                  "fixed": "1.27.0-rc.3"
+                }
+              ]
+            }
+          ],
+          "ecosystem_specific": {
+            "imports": [
+              {
+                "path": "net/url",
+                "symbols": [
+                  "URL.Parse",
+                  "URL.ResolveReference",
+                  "resolvePath"
+                ]
+              }
+            ]
+          },
+          "database_specific": {
+            "source": "https://vuln.go.dev/ID/GO-2026-6218.json"
+          }
+        }
+      ],
+      "schema_version": "1.9.0"
+    }
+  ],
+  "limitation": "Version matching only; not a reachable-symbol or binary scan."
+}

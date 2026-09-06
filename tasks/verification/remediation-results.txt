@@ -1,0 +1,24 @@
+Remediation verification — 2026-09-07
+Baseline: 638d4042118995fbf1a38d3822b1139aa3c6b467 (dev)
+
+PASS: Go 1.26.8 original SQLite CGO driver (GCC 16.2):
+  go build ./...
+  go test ./api ./store ./auth ./telegram/agent -count=1 -timeout=120s
+  go test ./config ./crypto ./telemetry -count=1
+  go test ./mcp/payment ./trader/hyperliquid ./trader ./trader/types ./provider/nofxos
+  go test ./kernel -run TestPaidVergexErrorsNeverTriggerFallback
+Auth baseline overlay RED and fixed GREEN logs: .cache/auth-validation/.
+Trading/payment fault injection RED/GREEN reported by implementation agent and independently re-executed by reviewer.
+
+PASS: npm ci --ignore-scripts; npm test (13 files, 160 tests); npm run build.
+Build warning: existing bundle over 500 kB, not a security failure.
+PASS: Compose main/prod/stable config --no-env-resolution; bash -n installer/stable/Railway.
+PASS: Linux temp-directory mocked installer tests (permissions 600, preserve secrets, reject symlink, reject RSA generation failure, source build).
+PASS: go list -deps ./... contains no golang.org/x/crypto/openpgp packages.
+Dependency advisory query: npm {}, Go remaining unused OpenPGP advisory GO-2026-5932. See remediation-dependency-audit.json.
+
+Not performed: Docker image build/run (daemon unavailable), PostgreSQL instance integration, live exchange orders or payments, public deployment, exhaustive whole-repository test execution.
+Temporary loopback dependency download relays forwarded to official HTTPS registries only; no credentials provided, integrity checks retained, no persisted registry override in project lockfile.
+Performance: auth native-file DB ~27us ->816us per request; mocked positions same order of magnitude; leverage acknowledgement validation +4-7us local CPU. No production timing claim.
+
+Independent final risk gate: APPROVED, no blocking findings in scoped changes. Reviewer independently ran native-CGO API/store regressions, trading/payment/kernel target regressions, SettingsPage tests and diff check. Separate auth reviewer approved config/crypto/telemetry.

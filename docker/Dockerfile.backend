@@ -1,70 +1,20 @@
-# docker/backend/Dockerfile
-
-# ═══════════════════════════════════════════════════════════════
-# NOFX Backend Dockerfile (Go + TA-Lib)
-# Multi-stage build with shared TA-Lib compilation stage
-# Versions extracted as ARGs for maintainability
-# ═══════════════════════════════════════════════════════════════
-
-ARG GO_VERSION=1.25.11-alpine
-ARG ALPINE_VERSION=latest
-ARG TA_LIB_VERSION=0.4.0
-
-# ──────────────────────────────────────────────────────────────
-# TA-Lib Build Stage (shared across builds)
-# ──────────────────────────────────────────────────────────────
-FROM alpine:${ALPINE_VERSION} AS ta-lib-builder
-ARG TA_LIB_VERSION
-
-RUN apk update && apk add --no-cache \
-    wget tar make gcc g++ musl-dev autoconf automake
-
-RUN wget http://prdownloads.sourceforge.net/ta-lib/ta-lib-${TA_LIB_VERSION}-src.tar.gz && \
-    tar -xzf ta-lib-${TA_LIB_VERSION}-src.tar.gz && \
-    cd ta-lib && \
-    if [ "$(uname -m)" = "aarch64" ]; then \
-        CONFIG_GUESS=$(find /usr/share -name config.guess | head -1) && \
-        CONFIG_SUB=$(find /usr/share -name config.sub | head -1) && \
-        cp "$CONFIG_GUESS" config.guess && \
-        cp "$CONFIG_SUB" config.sub && \
-        chmod +x config.guess config.sub; \
-    fi && \
-    ./configure --prefix=/usr/local && \
-    make && make install && \
-    cd .. && rm -rf ta-lib ta-lib-${TA_LIB_VERSION}-src.tar.gz
-
-# ──────────────────────────────────────────────────────────────
-# Backend Build Stage (Go Application)
-# ──────────────────────────────────────────────────────────────
+# Build only the checked-out Go source. TA-Lib is no longer used by this project.
+ARG GO_VERSION=1.26.8-alpine@sha256:ce864e7223ac17b1775e6fd0b4c0db580c2eb50e7953a427916379e4b92a1628
+ARG ALPINE_VERSION=3.23@sha256:fd791d74b68913cbb027c6546007b3f0d3bc45125f797758156952bc2d6daf40
 FROM golang:${GO_VERSION} AS backend-builder
-
-RUN apk update && apk add --no-cache git make gcc g++ musl-dev
-
-COPY --from=ta-lib-builder /usr/local /usr/local
-
+RUN apk add --no-cache gcc g++ musl-dev
 WORKDIR /app
 COPY go.mod go.sum ./
-RUN go mod download
-
+RUN go mod download && go mod verify
 COPY . .
-RUN CGO_ENABLED=1 GOOS=linux \
-    CGO_CFLAGS="-D_LARGEFILE64_SOURCE" \
+RUN CGO_ENABLED=1 GOOS=linux CGO_CFLAGS="-D_LARGEFILE64_SOURCE" \
     go build -trimpath -ldflags="-s -w" -o nofx .
 
-# ──────────────────────────────────────────────────────────────
-# Runtime Stage (Minimal Executable Environment)
-# ──────────────────────────────────────────────────────────────
 FROM alpine:${ALPINE_VERSION}
-
-RUN apk update && apk add --no-cache ca-certificates tzdata sqlite
-
-COPY --from=ta-lib-builder /usr/local /usr/local
+RUN apk add --no-cache ca-certificates tzdata sqlite
 WORKDIR /app
 COPY --from=backend-builder /app/nofx .
-
 EXPOSE 8080
-
 HEALTHCHECK --interval=30s --timeout=10s --start-period=60s --retries=3 \
   CMD wget --no-verbose --tries=1 --spider http://localhost:8080/api/health || exit 1
-
 CMD ["./nofx"]

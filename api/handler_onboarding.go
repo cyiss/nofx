@@ -1,12 +1,10 @@
 package api
 
 import (
-	"bufio"
 	"encoding/hex"
 	"fmt"
 	"net/http"
-	"os"
-	"path/filepath"
+
 	"strings"
 
 	"nofx/logger"
@@ -80,11 +78,6 @@ func (s *Server) handleBeginnerOnboarding(c *gin.Context) {
 		}
 	}
 
-	os.Setenv("CLAW402_WALLET_KEY", privateKey)
-	os.Setenv("CLAW402_WALLET_ADDRESS", address)
-	os.Setenv("CLAW402_DEFAULT_MODEL", payment.DefaultClaw402Model)
-
-	envSaved, envPath, envErr := persistBeginnerWalletEnv(privateKey, address)
 	balanceUSDC, balanceStatus := queryBeginnerWalletBalance(address)
 	resp := beginnerOnboardingResponse{
 		Address:           address,
@@ -96,15 +89,8 @@ func (s *Server) handleBeginnerOnboarding(c *gin.Context) {
 		ConfiguredModelID: configuredModelID,
 		BalanceUSDC:       balanceUSDC,
 		BalanceStatus:     balanceStatus,
-		EnvSaved:          envSaved,
-		EnvPath:           envPath,
 		ReusedExisting:    reusedExisting,
 	}
-	if envErr != nil {
-		resp.EnvWarning = envErr.Error()
-		logger.Warnf("Beginner wallet env persistence warning for user %s: %v", userID, envErr)
-	}
-
 	c.JSON(http.StatusOK, resp)
 }
 
@@ -151,20 +137,6 @@ func (s *Server) handleCurrentBeginnerWallet(c *gin.Context) {
 		return
 	}
 
-	address := strings.TrimSpace(os.Getenv("CLAW402_WALLET_ADDRESS"))
-	if address != "" {
-		balanceUSDC, balanceStatus := queryBeginnerWalletBalance(address)
-		c.JSON(http.StatusOK, currentBeginnerWalletResponse{
-			Found:         true,
-			Address:       address,
-			BalanceUSDC:   balanceUSDC,
-			BalanceStatus: balanceStatus,
-			Source:        "env",
-			Claw402Status: claw402Status,
-		})
-		return
-	}
-
 	c.JSON(http.StatusOK, currentBeginnerWalletResponse{
 		Found:         false,
 		Claw402Status: claw402Status,
@@ -196,25 +168,6 @@ func (s *Server) resolveBeginnerWallet(userID string) (privateKey string, addres
 		return existingKey, addr, model.ID, true, nil
 	}
 
-	// 2. Check for orphan claw402 wallet from a previous account (e.g. after account reset).
-	//    Adopt it to preserve funds.
-	orphan, orphanErr := s.store.AIModel().FindOrphanClaw402()
-	if orphanErr == nil && orphan != nil {
-		existingKey := strings.TrimSpace(orphan.APIKey.String())
-		if existingKey != "" {
-			addr, addrErr := walletAddressFromPrivateKey(existingKey)
-			if addrErr == nil {
-				if adoptErr := s.store.AIModel().AdoptModel(orphan.ID, userID); adoptErr != nil {
-					logger.Warnf("Failed to adopt orphan claw402 wallet for user %s: %v", userID, adoptErr)
-				} else {
-					logger.Infof("✓ Adopted orphan claw402 wallet %s for new user %s (address: %s)", orphan.ID, userID, addr)
-					return existingKey, addr, orphan.ID, true, nil
-				}
-			}
-		}
-	}
-
-	// 3. No existing wallet found — generate a new one
 	privateKeyObj, genErr := gethcrypto.GenerateKey()
 	if genErr != nil {
 		return "", "", "", false, genErr
@@ -255,109 +208,4 @@ func walletAddressFromPrivateKey(privateKey string) (string, error) {
 	}
 
 	return gethcrypto.PubkeyToAddress(privateKeyObj.PublicKey).Hex(), nil
-}
-
-func persistBeginnerWalletEnv(privateKey string, address string) (bool, string, error) {
-	paths := uniqueEnvPaths([]string{
-		".env",
-		filepath.Join(".", ".env"),
-		"/app/.env",
-	})
-
-	var lastErr error
-	for _, path := range paths {
-		if path == "" {
-			continue
-		}
-
-		if err := upsertEnvFile(path, map[string]string{
-			"CLAW402_WALLET_KEY":     privateKey,
-			"CLAW402_WALLET_ADDRESS": address,
-			"CLAW402_DEFAULT_MODEL":  payment.DefaultClaw402Model,
-		}); err != nil {
-			lastErr = err
-			continue
-		}
-
-		return true, path, nil
-	}
-
-	if lastErr == nil {
-		lastErr = fmt.Errorf("no writable .env path found")
-	}
-	return false, "", lastErr
-}
-
-func uniqueEnvPaths(paths []string) []string {
-	seen := make(map[string]struct{}, len(paths))
-	result := make([]string, 0, len(paths))
-	for _, path := range paths {
-		clean := filepath.Clean(path)
-		if _, ok := seen[clean]; ok {
-			continue
-		}
-		seen[clean] = struct{}{}
-		result = append(result, clean)
-	}
-	return result
-}
-
-func upsertEnvFile(path string, values map[string]string) error {
-	if err := os.MkdirAll(filepath.Dir(path), 0755); err != nil {
-		return err
-	}
-
-	existingLines := make([]string, 0)
-	if file, err := os.Open(path); err == nil {
-		scanner := bufio.NewScanner(file)
-		for scanner.Scan() {
-			existingLines = append(existingLines, scanner.Text())
-		}
-		file.Close()
-		if err := scanner.Err(); err != nil {
-			return err
-		}
-	} else if !os.IsNotExist(err) {
-		return err
-	}
-
-	remaining := make(map[string]string, len(values))
-	for key, value := range values {
-		remaining[key] = value
-	}
-
-	updatedLines := make([]string, 0, len(existingLines)+len(values))
-	for _, line := range existingLines {
-		trimmed := strings.TrimSpace(line)
-		if trimmed == "" || strings.HasPrefix(trimmed, "#") || !strings.Contains(line, "=") {
-			updatedLines = append(updatedLines, line)
-			continue
-		}
-
-		parts := strings.SplitN(line, "=", 2)
-		key := strings.TrimSpace(parts[0])
-		value, ok := remaining[key]
-		if !ok {
-			updatedLines = append(updatedLines, line)
-			continue
-		}
-
-		updatedLines = append(updatedLines, fmt.Sprintf("%s=%s", key, value))
-		delete(remaining, key)
-	}
-
-	for key, value := range remaining {
-		updatedLines = append(updatedLines, fmt.Sprintf("%s=%s", key, value))
-	}
-
-	content := strings.Join(updatedLines, "\n")
-	if content != "" && !strings.HasSuffix(content, "\n") {
-		content += "\n"
-	}
-
-	if err := os.WriteFile(path, []byte(content), 0600); err != nil {
-		return err
-	}
-
-	return nil
 }

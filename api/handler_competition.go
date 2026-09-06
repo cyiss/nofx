@@ -385,24 +385,16 @@ func (s *Server) getEquityHistoryForTraders(traderIDs []string, hours int) map[s
 	// Use a single consistent timestamp for all real-time data points
 	now := time.Now()
 
-	// Pre-fetch initial balances for all traders
-	initialBalances := make(map[string]float64)
-	for _, traderID := range traderIDs {
-		if traderID == "" {
-			continue
-		}
-		// Get trader's initial balance from database (use GetByID which doesn't require userID)
-		trader, err := s.store.Trader().GetByID(traderID)
-		if err == nil && trader != nil && trader.InitialBalance > 0 {
-			initialBalances[traderID] = trader.InitialBalance
-		}
-	}
-
 	for _, traderID := range traderIDs {
 		if traderID == "" {
 			continue
 		}
 
+		traderConfig, lookupErr := s.store.Trader().GetByID(traderID)
+		if lookupErr != nil || traderConfig == nil || !traderConfig.ShowInCompetition {
+			errors[traderID] = "Trader not found"
+			continue
+		}
 		// Get equity historical data from new equity table
 		var snapshots []*store.EquitySnapshot
 		var err error
@@ -422,7 +414,7 @@ func (s *Server) getEquityHistoryForTraders(traderIDs []string, hours int) map[s
 		}
 
 		// Get initial balance for calculating PnL percentage
-		initialBalance := initialBalances[traderID]
+		initialBalance := traderConfig.InitialBalance
 		if initialBalance <= 0 && len(snapshots) > 0 {
 			// If no initial balance configured, use the first snapshot's equity as baseline
 			initialBalance = snapshots[0].TotalEquity
@@ -498,6 +490,11 @@ func (s *Server) handleGetPublicTraderConfig(c *gin.Context) {
 		return
 	}
 
+	publicConfig, err := s.store.Trader().GetByID(traderID)
+	if err != nil || publicConfig == nil || !publicConfig.ShowInCompetition {
+		SafeNotFound(c, "Trader")
+		return
+	}
 	trader, err := s.traderManager.GetTrader(traderID)
 	if err != nil {
 		c.JSON(http.StatusNotFound, gin.H{"error": "Trader does not exist"})

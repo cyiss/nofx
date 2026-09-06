@@ -118,15 +118,11 @@ go mod download
 
 # Install frontend dependencies
 cd web
-npm install
+npm ci --ignore-scripts
 cd ..
 
-# Install TA-Lib (required)
-# macOS:
-brew install ta-lib
-
-# Ubuntu/Debian:
-sudo apt-get install libta-lib0-dev
+# Use Go 1.26.8+, Node.js 22, and a C compiler for SQLite (CGO).
+# TA-Lib is not required.
 ```
 
 ### 4. Make Your Changes

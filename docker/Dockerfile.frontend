@@ -5,8 +5,8 @@
 # Versions extracted as ARGs for consistency
 # ═══════════════════════════════════════════════════════════════
 
-ARG NODE_VERSION=20-alpine
-ARG NGINX_VERSION=alpine
+ARG NODE_VERSION=22-alpine@sha256:c610fcdfb1d5b4740dd70c284ed3cb16bb857e0f7166196e36a5501df7a3aa32
+ARG NGINX_VERSION=stable-alpine@sha256:dc5069ad14f19660b141b21236140b91656bf89bbc3e2417c70ae650cd66104c
 
 # ──────────────────────────────────────────────────────────────
 # Build Stage (Node)
@@ -15,7 +15,7 @@ FROM node:${NODE_VERSION} AS builder
 WORKDIR /build
 
 COPY web/package*.json ./
-RUN npm ci
+RUN npm ci --ignore-scripts
 
 COPY web/ ./
 RUN npm run build

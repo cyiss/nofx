@@ -67,10 +67,11 @@ func runBot(token string, cfg *config.Config, st *store.Store) bool {
 
 	// botUserID / botToken / agents are resolved lazily and refresh when user registers.
 	var (
-		botUserID    string
-		botUserEmail string
-		botToken     string
-		agents       *agent.Manager
+		botUserID         string
+		botUserEmail      string
+		botSessionVersion uint64
+		botToken          string
+		agents            *agent.Manager
 	)
 
 	resolveBotUser := func() bool {
@@ -79,16 +80,17 @@ func runBot(token string, cfg *config.Config, st *store.Store) bool {
 			return false
 		}
 		u := users[0]
-		if u.ID == botUserID {
+		if u.ID == botUserID && u.SessionVersion == botSessionVersion {
 			return true
 		}
-		newToken, err := agent.GenerateBotToken(u.ID)
+		newToken, err := agent.GenerateBotToken(u.ID, u.SessionVersion)
 		if err != nil {
 			logger.Errorf("Failed to generate bot JWT for user %s: %v", u.ID, err)
 			return false
 		}
 		prev := botUserID
 		botUserID = u.ID
+		botSessionVersion = u.SessionVersion
 		botUserEmail = u.Email
 		botToken = newToken
 		agents = agent.NewManager(cfg.APIServerPort, botToken, botUserEmail, botUserID,

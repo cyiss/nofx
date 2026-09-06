@@ -133,8 +133,7 @@ func (t *HyperliquidTrader) GetBalance() (map[string]interface{}, error) {
 	var xyzPositions []xyzAssetPosition
 	xyzAccountValue, xyzUnrealizedPnl, xyzPositions, err = t.getXYZDexBalance()
 	if err != nil {
-		// xyz dex query failed - log warning but don't fail the entire balance query
-		logger.Infof("⚠️ Failed to query xyz dex balance: %v", err)
+		return nil, fmt.Errorf("incomplete balance snapshot: failed to query xyz dex balance: %w", err)
 	}
 	// Always log xyz dex state for debugging
 	logger.Infof("🔍 xyz dex state: accountValue=%.4f, unrealizedPnl=%.4f, positions=%d",

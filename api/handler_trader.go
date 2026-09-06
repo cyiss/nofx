@@ -745,6 +745,10 @@ func (s *Server) handleDeleteTrader(c *gin.Context) {
 
 	// Delete from database
 	err := s.store.Trader().Delete(userID, traderID)
+	if errors.Is(err, gorm.ErrRecordNotFound) {
+		SafeNotFound(c, "Trader")
+		return
+	}
 	if err != nil {
 		SafeInternalError(c, "Failed to delete trader", err)
 		return

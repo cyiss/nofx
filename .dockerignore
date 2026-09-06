@@ -33,6 +33,29 @@ test_*
 docs/
 
 # Runtime data
+data/
+.env
+.env.*
+**/.env
+**/.env.*
+secrets/
+*.db
+*.db-*
+*.sqlite*
+*.pem
+*.key
+*.p12
+*.pfx
+**/secrets/
+**/*.db
+**/*.db-*
+**/*.sqlite*
+**/*.pem
+**/*.key
+**/*.p12
+**/*.pfx
+.cache/
+tasks/
 decision_logs/
 *.log
 

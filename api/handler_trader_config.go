@@ -1,11 +1,13 @@
 package api
 
 import (
+	"errors"
 	"net/http"
 
 	"nofx/logger"
 
 	"github.com/gin-gonic/gin"
+	"gorm.io/gorm"
 )
 
 // handleUpdateTraderPrompt Update trader custom prompt
@@ -25,6 +27,10 @@ func (s *Server) handleUpdateTraderPrompt(c *gin.Context) {
 
 	// Update database
 	err := s.store.Trader().UpdateCustomPrompt(userID, traderID, req.CustomPrompt, req.OverrideBasePrompt)
+	if errors.Is(err, gorm.ErrRecordNotFound) {
+		SafeNotFound(c, "Trader")
+		return
+	}
 	if err != nil {
 		SafeInternalError(c, "Failed to update custom prompt", err)
 		return
@@ -57,6 +63,10 @@ func (s *Server) handleToggleCompetition(c *gin.Context) {
 
 	// Update database
 	err := s.store.Trader().UpdateShowInCompetition(userID, traderID, req.ShowInCompetition)
+	if errors.Is(err, gorm.ErrRecordNotFound) {
+		SafeNotFound(c, "Trader")
+		return
+	}
 	if err != nil {
 		SafeInternalError(c, "Update competition visibility", err)
 		return

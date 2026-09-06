@@ -155,6 +155,7 @@ func NewHyperliquidTrader(privateKeyHex string, walletAddr string, testnet bool,
 			walletAddr, // wallet address
 			nil,        // SpotMeta — fetched automatically
 			nil,        // perpDexs — fetched automatically
+			leverageResponseOption(),
 		)
 	})
 	if err != nil {

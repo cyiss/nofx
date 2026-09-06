@@ -322,11 +322,9 @@ func (at *AutoTrader) InitializeGrid() error {
 	// Initialize grid levels
 	at.initializeGridLevels(price, gridConfig)
 
-	at.gridState.IsInitialized = true
-
 	// Keep grid orders aligned with the trader's configured cross/isolated mode.
 	if err := at.trader.SetMarginMode(gridConfig.Symbol, at.config.IsCrossMargin); err != nil {
-		logger.Warnf("[Grid] Failed to set margin mode for %s: %v", gridConfig.Symbol, err)
+		return fmt.Errorf("failed to set grid margin mode: %w", err)
 	} else {
 		marginMode := "cross"
 		if !at.config.IsCrossMargin {
@@ -337,12 +335,12 @@ func (at *AutoTrader) InitializeGrid() error {
 
 	// CRITICAL: Set leverage on exchange before trading
 	if err := at.trader.SetLeverage(gridConfig.Symbol, gridConfig.Leverage); err != nil {
-		logger.Warnf("[Grid] Failed to set leverage %dx on exchange: %v", gridConfig.Leverage, err)
-		// Not fatal - continue with default leverage
+		return fmt.Errorf("failed to set grid leverage: %w", err)
 	} else {
 		logger.Infof("[Grid] Leverage set to %dx for %s", gridConfig.Leverage, gridConfig.Symbol)
 	}
 
+	at.gridState.IsInitialized = true
 	logger.Infof("[Grid] Initialized: %d levels, $%.2f - $%.2f, spacing $%.2f",
 		gridConfig.GridCount, at.gridState.LowerPrice, at.gridState.UpperPrice, at.gridState.GridSpacing)
 
@@ -499,6 +497,9 @@ func (at *AutoTrader) buildGridContext() (*kernel.GridContext, error) {
 
 	// Get account info
 	balance, err := at.trader.GetBalance()
+	if err != nil {
+		return nil, fmt.Errorf("failed to get grid account balance: %w", err)
+	}
 	if err == nil {
 		if equity, ok := balance["total_equity"].(float64); ok {
 			ctx.TotalEquity = equity
@@ -513,6 +514,9 @@ func (at *AutoTrader) buildGridContext() (*kernel.GridContext, error) {
 
 	// Get current position
 	positions, err := at.trader.GetPositions()
+	if err != nil {
+		return nil, fmt.Errorf("failed to get grid positions: %w", err)
+	}
 	if err == nil {
 		for _, pos := range positions {
 			if sym, ok := pos["symbol"].(string); ok && sym == gridConfig.Symbol {

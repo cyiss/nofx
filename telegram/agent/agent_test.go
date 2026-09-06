@@ -8,6 +8,7 @@ import (
 	"testing"
 	"time"
 
+	"nofx/auth"
 	"nofx/mcp"
 )
 
@@ -111,8 +112,10 @@ func mockAPIServer(handlers map[string]string) (*httptest.Server, int) {
 
 // TestAgentDirectReply: LLM replies with text (no tool calls) — one LLM call.
 func TestAgentDirectReply(t *testing.T) {
+	srv, port := mockAPIServer(nil)
+	defer srv.Close()
 	llm := &mockLLM{responses: []*mcp.LLMResponse{textReply("Hello! How can I help you?")}}
-	a := New(8080, "tok", "test-user", mockGetLLM(llm), testPrompt)
+	a := New(port, "tok", "test-user", mockGetLLM(llm), testPrompt)
 
 	reply := a.Run("hello", nil)
 
@@ -121,6 +124,23 @@ func TestAgentDirectReply(t *testing.T) {
 	}
 	if llm.calls != 1 {
 		t.Fatalf("expected 1 LLM call, got %d", llm.calls)
+	}
+}
+
+func TestBotTokenCarriesSessionVersion(t *testing.T) {
+	previous := auth.JWTSecret
+	t.Cleanup(func() { auth.JWTSecret = previous })
+	auth.SetJWTSecret("disposable-test-signing-key-for-bot-session")
+	token, err := GenerateBotToken("owner", 7)
+	if err != nil {
+		t.Fatal(err)
+	}
+	claims, err := auth.ValidateJWT(token)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if claims.UserID != "owner" || claims.SessionVersion != 7 {
+		t.Fatalf("unexpected bot session claims: %+v", claims)
 	}
 }
 
